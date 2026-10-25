@@ -300,15 +300,65 @@ static void CheckSpotting(int team, int cls)
 	player->client = NULL;
 }
 
+
+static void CheckBudget(void)
+{
+    int team, mask, i;
+    weapon_t options[CUSTOM_OPTION_COUNT] = { WP_MEDKIT, WP_MEDIC_SYRINGE, WP_AMMO, WP_PLIERS, WP_K43, WP_MOBILE_MG42, WP_SATCHEL, WP_SMOKE_BOMB };
+    const int expectedCosts[CUSTOM_OPTION_COUNT] = { 3, 4, 3, 6, 4, 5, 4, 2 };
+    Check(!BG_CustomValid(-1), "reject negative mask");
+    Check(!BG_CustomValid(256), "reject unknown capability");
+    Check(!BG_CustomValid(1000), "reject oversized mask");
+    for (team = TEAM_AXIS; team <= TEAM_ALLIES; team++)
+    {
+        for (mask = 0; mask < 256; mask++)
+        {
+            gclient_t client;
+            int expected = 0;
+            for (i = 0; i < CUSTOM_OPTION_COUNT; i++) if (mask & (1 << i)) expected += expectedCosts[i];
+            Check(BG_CustomCost(mask) == expected, "catalog cost matches balance contract");
+            Check(!!BG_CustomValid(mask) == (expected <= 12), "all subset budget boundaries");
+            Com_Memset(&client, 0, sizeof(client));
+            client.sess.sessionTeam = team;
+            client.sess.playerType = PC_CUSTOM;
+            client.sess.customActiveLoadout = mask;
+            client.sess.playerWeapon = WP_PANZERFAUST;
+            client.sess.playerWeapon2 = WP_AKIMBO_LUGER;
+            SetWolfSpawnWeapons(&client);
+            Check(client.ps.stats[STAT_PLAYER_CLASS] == PC_CUSTOM, "real sixth class");
+            Check(client.ps.stats[STAT_CUSTOM_LOADOUT] == (expected <= 12 ? mask : 0), "server spawn fails closed on invalid saved loadout");
+            Check(!COM_BitCheck(client.ps.weapons, WP_PANZERFAUST), "cannot inject unpaid primary");
+            Check(!COM_BitCheck(client.ps.weapons, WP_AKIMBO_LUGER), "cannot inject unpaid secondary");
+            Check(COM_BitCheck(client.ps.weapons, team == TEAM_AXIS ? WP_MP40 : WP_THOMPSON), "base SMG always granted");
+            for (i = 0; i < CUSTOM_OPTION_COUNT; i++)
+            {
+                weapon_t w = options[i];
+                if (team == TEAM_ALLIES && i == 4) w = WP_GARAND;
+                if (team == TEAM_ALLIES && i == 5) w = WP_MOBILE_BROWNING;
+                Check(!!COM_BitCheck(client.ps.weapons, w) == (expected <= 12 && !!(mask & (1 << i))), "only purchased equipment granted");
+            }
+            Check(!!BG_HasEngineerTools(&client.ps) == (expected <= 12 && !!(mask & CUSTOM_ENGINEER)), "Engineer permissions match purchase");
+            Check(!!BG_CanRevive(&client.ps) == (expected <= 12 && !!(mask & CUSTOM_REVIVE)), "revive permissions match purchase");
+            client.sess.customActiveLoadout = 0;
+            SetWolfSpawnWeapons(&client);
+            Check(!COM_BitCheck(client.ps.weapons, WP_PLIERS) && !COM_BitCheck(client.ps.weapons, WP_MEDKIT), "respawn removes deselected abilities");
+            client.sess.playerType = PC_SOLDIER;
+            SetWolfSpawnWeapons(&client);
+            Check(!client.ps.stats[STAT_CUSTOM_LOADOUT], "normal class clears custom state");
+        }
+    }
+}
+
 int main(void)
 {
 	int team, cls, i, xp;
 	team_riflegrenades.integer = 1;
 	dllEntry(TestSyscall);
 	CheckMineDamage();
+	CheckBudget();
 	for (team = TEAM_AXIS; team <= TEAM_ALLIES; team++)
 	{
-		for (cls = PC_SOLDIER; cls < NUM_PLAYER_CLASSES; cls++)
+		for (cls = PC_SOLDIER; cls < PC_CUSTOM; cls++)
 		{
 			bg_playerclass_t *info = BG_GetPlayerClassInfo(team, cls);
 			CheckPliersActions(team, cls);

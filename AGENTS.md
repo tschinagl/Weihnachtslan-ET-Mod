@@ -1,4 +1,4 @@
-# Agentenvertrag: Weihnachtslan-ET-Mod
+# Agentenvertrag: ETBudget-Mod
 
 ## Scope und Dokumentation
 
@@ -6,6 +6,13 @@
 - README und `.agents/skills/etlab-mod/SKILL.md` lesen; gezielt passende Referenzen nachladen.
 - Gameplay-Sollzustand: `docs/spielregeln.md`. Vorhandene Regeln erhalten, soweit der Auftrag sie nicht ausdrücklich ändert.
 - Nur Gamecode-Mod bearbeiten. Offizielle Release-Engine und externe Libraries unverändert verwenden.
+
+## Experiment-Vertrag
+
+- Branch `experiment/custom-budget`; eigener Worktree, Source-Cache, Runtime und Profile. Mod-ID `etbudget`; keine Änderungen oder Übernahme in `main` ohne Auftrag.
+- Windows-Prototyp: `Budget-Mod starten.cmd` startet mit dem Release-Lock; lokaler Spielport 27980.
+- Custom-Katalog und Kosten: `bg_customOptions` und `CUSTOM_BUDGET`; Server und Client verwenden dieselben Definitionen.
+- Grafiktests ausschließlich über `scripts/Hidden-TestClient.ps1`: privater Windows-Desktop, niemals zum Testdesktop wechseln, Audioinitialisierung mit `s_initsound 0` deaktiviert. Keine sichtbaren Testfenster und kein Ton. Interaktiver Spielstart bleibt davon getrennt.
 
 ## Plattform und Tests
 

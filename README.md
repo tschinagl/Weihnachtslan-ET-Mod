@@ -1,6 +1,6 @@
-# Weihnachtslan-ET-Mod
+# ETBudget-Mod
 
-Ein ET: Legacy-Mod für die Weihnachts-LAN. Das Projekt bündelt angepasste Klassenfähigkeiten, Loadouts und Minenregeln für gemeinsame Spielrunden unter Windows und Linux. Die offizielle ET: Legacy-Engine bleibt unverändert.
+Ein experimenteller ET: Legacy-Mod mit einer sechsten Klasse: Custom. Im Limbo-Menü lassen sich acht Ausrüstungs- und Fähigkeitspakete innerhalb eines Budgets von zwölf Punkten kombinieren. Die fünf klassischen Klassen bleiben spielbar. Der Windows-Prototyp verwendet eigene Spielprofile und die unveränderte offizielle ET: Legacy-Engine.
 
 ## Einstieg für LLM-Agenten
 
@@ -27,7 +27,7 @@ Claude Code lädt über `CLAUDE.md` die gemeinsamen Regeln aus `AGENTS.md`, dem 
 
 ## Repository-Vertrag
 
-- Ein nativer Gamecode-Mod, interner Modname und `fs_game`: `etlab`.
+- Ein nativer Gamecode-Mod, interner Modname und `fs_game`: `etbudget`.
 - Kanonische Mod-Änderungen: `mod/etlab.patch`; native Tests: `tests/native/`; Runtime-Assertions: `tests/*.lua`.
 - Abhängigkeit: offizieller ET: Legacy-Stable-Release. Normale Vorbereitung/Build/Start ermitteln die neueste Veröffentlichung; kein `master`, Nightly oder RC.
 - Reproduzierbarer Stand: Windows `release.lock.json`, Linux `release-linux.lock.json`; `-Locked` beziehungsweise `--locked` bewusst einsetzen.

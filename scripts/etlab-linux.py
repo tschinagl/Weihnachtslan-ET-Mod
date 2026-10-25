@@ -205,7 +205,7 @@ def build(locked=False, jobs=4):
     manifest_path = LOGS / "build.json"
     old = read_json(manifest_path) if manifest_path.exists() else {}
     if old.get("input") == fingerprint and old.get("runtime") == saved["runtimePath"] and old.get("files"):
-        if all((runtime / "etlab" / name).is_file() and digest(runtime / "etlab" / name) == sha for name, sha in old["files"].items()):
+        if all((runtime / "etbudget" / name).is_file() and digest(runtime / "etbudget" / name) == sha for name, sha in old["files"].items()):
             print("Mod-Build ist aktuell und unveraendert.")
             return saved
     for entry in Path("/proc").iterdir():
@@ -218,7 +218,7 @@ def build(locked=False, jobs=4):
         if executable.is_relative_to(runtime):
             raise RuntimeError("ETLab laeuft noch. Vor dem Build Spiel/Server schliessen.")
     build_dir = source / "build"
-    options = dict(CMAKE_BUILD_TYPE="Release", CROSS_COMPILE32="OFF", BUNDLED_LIBS="ON", MODNAME="etlab",
+    options = dict(CMAKE_BUILD_TYPE="Release", CROSS_COMPILE32="OFF", BUNDLED_LIBS="ON", MODNAME="etbudget",
                    BUILD_CLIENT="OFF", BUILD_SERVER="OFF", BUILD_MOD="ON", INSTALL_EXTRA="OFF",
                    FEATURE_AUTOUPDATE="OFF", FEATURE_AUTH="OFF", FEATURE_TRACKER="OFF", FEATURE_CURL="OFF",
                    FEATURE_SSL="OFF", FEATURE_LUA="ON", ETLAB_BUILD_TESTS="ON",
@@ -227,13 +227,13 @@ def build(locked=False, jobs=4):
     run("cmake", "--build", build_dir, "--parallel", str(jobs), "--target",
         "qagame", "cgame", "ui", "tvgame", "mod_pk3", "etlab_loadout_tests")
     run("ctest", "--test-dir", build_dir, "--output-on-failure")
-    output = build_dir / "etlab"
-    files = [output / name for name in MODULES] + list(output.glob("etlab_*.pk3"))
+    output = build_dir / "etbudget"
+    files = [output / name for name in MODULES] + list(output.glob("etbudget_*.pk3"))
     if len(files) != 5 or not all(p.is_file() for p in files):
         raise RuntimeError("Unvollstaendige oder mehrdeutige Mod-Ausgabe.")
-    destination = runtime / "etlab"
+    destination = runtime / "etbudget"
     destination.mkdir(exist_ok=True)
-    for old_pak in destination.glob("etlab_*.pk3"):
+    for old_pak in destination.glob("etbudget_*.pk3"):
         if old_pak.name not in [p.name for p in files]:
             if old.get("runtime") != saved["runtimePath"] or old_pak.name not in old.get("files", {}):
                 raise RuntimeError("Unbekanntes altes Mod-PK3: " + str(old_pak))
@@ -250,12 +250,12 @@ def build(locked=False, jobs=4):
 
 def runtime_args(saved, profile, executable="etl.x86_64"):
     runtime = ROOT / saved["runtimePath"]
-    for required in [runtime / executable, runtime / "etlab" / MODULES[0]] + [runtime / "etmain" / p for p in PAKS]:
+    for required in [runtime / executable, runtime / "etbudget" / MODULES[0]] + [runtime / "etmain" / p for p in PAKS]:
         if not required.is_file():
             raise RuntimeError("Datei fehlt; Build/Spieldatenimport erforderlich: " + str(required))
     profile.mkdir(parents=True, exist_ok=True)
     return [str(runtime / executable), "+set", "fs_basepath", str(runtime), "+set", "fs_homepath", str(profile),
-            "+set", "fs_game", "etlab", "+set", "net_enabled", "1", "+set", "cl_autoupdate", "0",
+            "+set", "fs_game", "etbudget", "+set", "net_enabled", "1", "+set", "cl_autoupdate", "0",
             "+set", "com_introplayed", "1", "+set", "logfile", "2"]
 
 
@@ -293,7 +293,7 @@ def start_game(args):
     saved = build(args.locked, args.jobs)
     runtime = ROOT / saved["runtimePath"]
     profile = ROOT / "profiles" / ("linux-smoke-" + uuid.uuid4().hex if args.mine_smoke else "linux-play")
-    mod_profile = profile / "etlab"
+    mod_profile = profile / "etbudget"
     mod_profile.mkdir(parents=True, exist_ok=True)
     available_port("127.0.0.1", args.port)
     command = runtime_args(saved, profile)
@@ -328,7 +328,7 @@ def start_game(args):
     if "ETLAB_MINES_RUNTIME_PASS" not in log or re.search(r"ETLAB_MINES_RUNTIME_FAIL|Lua error", log):
         raise RuntimeError("Gameplay-Smoke fehlgeschlagen: " + str(mod_profile))
     screenshot = mod_profile / "screenshots/etlab-mines-spotted.jpg"
-    if not screenshot.is_file() or "Initializing etlab cgame" not in log:
+    if not screenshot.is_file() or "Initializing etbudget cgame" not in log:
         raise RuntimeError("Client-/Screenshot-Nachweis fehlt: " + str(mod_profile))
     write_json(LOGS / "client-smoke.json", dict(passed=True, profile=str(profile),
                engineSha256=digest(runtime / "etl.x86_64"), files=read_json(LOGS / "build.json")["files"],
@@ -369,11 +369,11 @@ def assert_loopback_socket(pid, port):
         raise RuntimeError("Unerwartete UDP-Bindung des Testservers: " + repr(sockets))
 
 
-def smoke_server(port=27970):
+def smoke_server(port=27980):
     saved = state()
     runtime = ROOT / saved["runtimePath"]
     profile = ROOT / "profiles" / ("linux-server-smoke-" + uuid.uuid4().hex)
-    mod_profile = profile / "etlab"
+    mod_profile = profile / "etbudget"
     mod_profile.mkdir(parents=True)
     available_port("127.0.0.1", port)
     password = uuid.uuid4().hex
@@ -422,7 +422,7 @@ def smoke_server(port=27970):
 def export_mod(jobs, windows_package=None):
     saved = build(locked=True, jobs=jobs)
     runtime = ROOT / saved["runtimePath"]
-    binaries = {name: (runtime / "etlab" / name).read_bytes() for name in read_json(LOGS / "build.json")["files"]}
+    binaries = {name: (runtime / "etbudget" / name).read_bytes() for name in read_json(LOGS / "build.json")["files"]}
     target_platform = "linux-x86_64"
     if windows_package:
         with zipfile.ZipFile(windows_package) as windows:
@@ -432,7 +432,7 @@ def export_mod(jobs, windows_package=None):
                 raise RuntimeError("Windows-Paket muss denselben Source-Commit und Mod-Patch verwenden.")
             win_files = {item["name"]: item["sha256"].lower() for item in manifest["files"]}
             for name in ("cgame_mp_x64.dll", "ui_mp_x64.dll", "qagame_mp_x64.dll", "tvgame_mp_x64.dll"):
-                data = windows.read("etlab/" + name)
+                data = windows.read("etbudget/" + name)
                 if hashlib.sha256(data).hexdigest() != win_files.get(name):
                     raise RuntimeError("Windows-Paket-Pruefsumme stimmt nicht: " + name)
                 binaries[name] = data
@@ -445,14 +445,14 @@ def export_mod(jobs, windows_package=None):
                 pak.writestr(name, binaries[name])
         binaries[pak_name] = combined.getvalue()
         target_platform = "windows-x64-linux-x86_64"
-    output = ROOT / "dist" / ("etlab-" + target_platform + "-" + saved["version"] + "-" + time.strftime("%Y%m%d-%H%M%S") + ".zip")
+    output = ROOT / "dist" / ("etbudget-" + target_platform + "-" + saved["version"] + "-" + time.strftime("%Y%m%d-%H%M%S") + ".zip")
     output.parent.mkdir(exist_ok=True)
-    manifest = dict(mod="etlab", platform=target_platform, etLegacy=saved["version"], commit=saved["commit"],
+    manifest = dict(mod="etbudget", platform=target_platform, etLegacy=saved["version"], commit=saved["commit"],
                     patchSha256=saved["patchSha256"], buildSystem=platform.freedesktop_os_release().get("PRETTY_NAME", "Linux"),
                     libc=platform.libc_ver(), files={name: hashlib.sha256(data).hexdigest() for name, data in binaries.items()})
     with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as archive:
         for name, data in binaries.items():
-            archive.writestr("etlab/" + name, data)
+            archive.writestr("etbudget/" + name, data)
         archive.write(ROOT / "LICENSE", "LICENSE")
         archive.write(ROOT / "docs/installation.md", "installation.md")
         archive.writestr("manifest.json", json.dumps(manifest, indent=2) + "\n")
@@ -469,7 +469,7 @@ def main():
         if name in ("build", "start", "server", "connect", "export"):
             child.add_argument("--jobs", type=int, choices=range(1, 33), default=min(8, os.cpu_count() or 4), metavar="1-32")
         if name in ("start", "server", "smoke"):
-            child.add_argument("--port", type=int, default=27970)
+            child.add_argument("--port", type=int, default=27980)
         if name in ("start", "server"):
             child.add_argument("--map", default="oasis")
         if name == "start":

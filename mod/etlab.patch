@@ -12,11 +12,135 @@ index 9bce4a23d..59038d88f 100644
 +	enable_testing()
 +	add_subdirectory(tests)
 +endif()
+diff --git a/src/cgame/cg_draw_hud.c b/src/cgame/cg_draw_hud.c
+index e03c7cd52..06c9636b9 100644
+--- a/src/cgame/cg_draw_hud.c
++++ b/src/cgame/cg_draw_hud.c
+@@ -1155,6 +1155,15 @@ void CG_DrawWeapRecharge(hudComponent_t *comp)
+ 	// Draw power bar
+ 	switch (cg.snap->ps.stats[STAT_PLAYER_CLASS])
+ 	{
++	case PC_CUSTOM:
++		switch (GetWeaponTableData(cg.predictedPlayerState.weapon)->skillBased)
++		{
++		case SK_FIRST_AID: chargeTime = cg.medicChargeTime[cg.snap->ps.persistant[PERS_TEAM] - 1]; break;
++		case SK_SIGNALS: chargeTime = cg.fieldopsChargeTime[cg.snap->ps.persistant[PERS_TEAM] - 1]; break;
++		case SK_MILITARY_INTELLIGENCE_AND_SCOPED_WEAPONS: chargeTime = cg.covertopsChargeTime[cg.snap->ps.persistant[PERS_TEAM] - 1]; break;
++		default: chargeTime = cg.engineerChargeTime[cg.snap->ps.persistant[PERS_TEAM] - 1]; break;
++		}
++		break;
+ 	case PC_ENGINEER:
+ 		chargeTime = cg.engineerChargeTime[cg.snap->ps.persistant[PERS_TEAM] - 1];
+ 		break;
+@@ -1771,6 +1780,15 @@ void CG_DrawWeaponCharge(hudComponent_t *comp)
+ 
+ 	switch (cg.snap->ps.stats[STAT_PLAYER_CLASS])
+ 	{
++	case PC_CUSTOM:
++		switch (GetWeaponTableData(cg.predictedPlayerState.weapon)->skillBased)
++		{
++		case SK_FIRST_AID: chargeTime = cg.medicChargeTime[cg.snap->ps.persistant[PERS_TEAM] - 1]; break;
++		case SK_SIGNALS: chargeTime = cg.fieldopsChargeTime[cg.snap->ps.persistant[PERS_TEAM] - 1]; break;
++		case SK_MILITARY_INTELLIGENCE_AND_SCOPED_WEAPONS: chargeTime = cg.covertopsChargeTime[cg.snap->ps.persistant[PERS_TEAM] - 1]; break;
++		default: chargeTime = cg.engineerChargeTime[cg.snap->ps.persistant[PERS_TEAM] - 1]; break;
++		}
++		break;
+ 	case PC_ENGINEER:
+ 		chargeTime = cg.engineerChargeTime[cg.snap->ps.persistant[PERS_TEAM] - 1];
+ 		break;
 diff --git a/src/cgame/cg_limbopanel.c b/src/cgame/cg_limbopanel.c
-index 55a8fda9c..facb69251 100644
+index 55a8fda9c..f2f85bc2a 100644
 --- a/src/cgame/cg_limbopanel.c
 +++ b/src/cgame/cg_limbopanel.c
-@@ -2627,7 +2627,7 @@ static weapon_t CG_LimboPanel_WeaponPanel_GetSelectableWeaponOption(bg_playercla
+@@ -34,6 +34,8 @@
+ 
+ #include "cg_local.h"
+ 
++static int cg_customLoadout = CUSTOM_MEDKIT | CUSTOM_REVIVE | CUSTOM_SNIPER;
++
+ extern const char *cg_skillRewards[SK_NUM_SKILLS][NUM_SKILL_LEVELS - 1];
+ extern const char *cg_skillRewardsDetails[SK_NUM_SKILLS][NUM_SKILL_LEVELS - 1];
+ 
+@@ -245,12 +247,12 @@ TEAM_COUNTER(1);
+ TEAM_COUNTER(2);
+ 
+ #define CLASS_COUNTER_GAP   ((CLASS_COUNTER_SIZE - (CLASS_COUNTER_WIDTH * CLASS_COUNTER_COUNT)) / (CLASS_COUNTER_COUNT + 1.f))
+-#define CLASS_COUNTER_COUNT 5.f
++#define CLASS_COUNTER_COUNT 6.f
+ #define CLASS_COUNTER_WIDTH 20.f
+ #define CLASS_COUNTER_X     435.f
+ #define CLASS_COUNTER_SIZE  (645.f - CLASS_COUNTER_X)
+ //#define CLASS_COUNTER_LIGHT_DIFF 4.f
+-#define CLASS_COUNTER_BUTTON_DIFF (-18.f)
++#define CLASS_COUNTER_BUTTON_DIFF (-10.f)
+ #define CLASS_COUNTER(number)            \
+ 		static panel_button_t classCounter ## number = {     \
+ 			NULL,                                   \
+@@ -310,6 +312,7 @@ CLASS_COUNTER(1);
+ CLASS_COUNTER(2);
+ CLASS_COUNTER(3);
+ CLASS_COUNTER(4);
++CLASS_COUNTER(5);
+ 
+ #define FILTER_BUTTON(number) \
+ 		static panel_button_t filterButton ## number = { \
+@@ -1070,9 +1073,9 @@ static panel_button_t *limboPanelButtons[] =
+ {
+ 	&rightLimboPannel,
+ 
+-	&classCounter0,           &classCounter1,             &classCounter2,         &classCounter3, &classCounter4,
++	&classCounter0,           &classCounter1,             &classCounter2,         &classCounter3, &classCounter4, &classCounter5,
+ //  &classCounterLight0,    &classCounterLight1,    &classCounterLight2,    &classCounterLight3,    &classCounterLight4,
+-	&classButton0,            &classButton1,              &classButton2,          &classButton3,  &classButton4,
++	&classButton0,            &classButton1,              &classButton2,          &classButton3,  &classButton4, &classButton5,
+ 
+ 	&classBar,                &classBarText,
+ 
+@@ -1384,7 +1387,16 @@ void CG_LimboPanel_SendSetupMsg(qboolean forceteam)
+ 		return;
+ 	}
+ 
+-	trap_SendClientCommand(va("team %s %i %i %i", str, CG_LimboPanel_GetClass(), weap1, weap2));
++    if (CG_LimboPanel_GetClass() == PC_CUSTOM)
++    {
++        if (!BG_CustomValid(cg_customLoadout)) return;
++        trap_Cvar_Set("cg_budgetLoadout", va("%i", cg_customLoadout));
++        trap_SendClientCommand(va("team %s %i %i %i %i", str, PC_CUSTOM, weap1, weap2, cg_customLoadout));
++    }
++    else
++    {
++        trap_SendClientCommand(va("team %s %i %i %i", str, CG_LimboPanel_GetClass(), weap1, weap2));
++    }
+ 
+ 	if (forceteam)
+ 	{
+@@ -1703,6 +1715,10 @@ void CG_LimboPanel_ClassBar_Draw(panel_button_t *button)
+ 	{
+ 		text = BG_ClassnameForNumber(PC_FIELDOPS);
+ 	}
++	else if (BG_CursorInRect(&classButton5.rect))
++	{
++		text = "Custom - Punktebudget";
++	}
+ 	else if (BG_CursorInRect(&classButton4.rect))
+ 	{
+ 		text = BG_ClassnameForNumber(PC_COVERTOPS);
+@@ -1735,6 +1751,14 @@ void CG_LimboPanel_RenderClassButton(panel_button_t *button)
+ 	float s0, t0, s1, t1;
+ 	float x, y, w, h;
+ 
++    if (button->data[1] == PC_CUSTOM)
++    {
++        vec4_t bg = { 0.08f, 0.12f, 0.14f, 1.f };
++        CG_FillRect(button->rect.x, button->rect.y, button->rect.w, button->rect.h, bg);
++        CG_DrawRect(button->rect.x, button->rect.y, button->rect.w, button->rect.h, 1, CG_LimboPanel_GetClass() == PC_CUSTOM ? colorYellow : colorWhite);
++        CG_Text_Paint_Ext(button->rect.x + 7, button->rect.y + 24, 0.3f, 0.3f, colorWhite, "+", 0, 0, 0, &cgs.media.limboFont2);
++        return;
++    }
+ 	CG_DrawPic(button->rect.x, button->rect.y, button->rect.w, button->rect.h, cgs.media.limboClassButton2Back_off);
+ 
+ 	if (CG_LimboPanel_GetTeam() != TEAM_SPECTATOR)
+@@ -2627,7 +2651,7 @@ static weapon_t CG_LimboPanel_WeaponPanel_GetSelectableWeaponOption(bg_playercla
  	else
  	{
  		// is player had the minimum level required to use this weapon
@@ -25,7 +149,105 @@ index 55a8fda9c..facb69251 100644
  		{
  			return WP_NONE;
  		}
-@@ -3812,7 +3812,7 @@ int CG_LimboPanel_WeaponCount(int slotNumber)
+@@ -3409,6 +3433,10 @@ void CG_LimboPanel_Setup(void)
+ 	char           buffer[256];
+ 
+ 	cgs.limboLoadoutModified = qfalse;
++	trap_Cvar_VariableStringBuffer("cg_budgetLoadout", buffer, sizeof(buffer));
++	cg_customLoadout = Q_atoi(buffer);
++	if (cgs.clientinfo[cg.clientNum].latchedcls == PC_CUSTOM) cg_customLoadout = cgs.clientinfo[cg.clientNum].customLoadout;
++	if (!BG_CustomValid(cg_customLoadout)) cg_customLoadout = 0;
+ 
+ 	trap_Cvar_VariableStringBuffer("name", buffer, 256);
+ 	trap_Cvar_Set("limboname", buffer);
+@@ -3461,6 +3489,7 @@ void CG_LimboPanel_Setup(void)
+  */
+ void CG_LimboPanel_Init(void)
+ {
++	trap_Cvar_Register(NULL, "cg_budgetLoadout", "19", CVAR_ARCHIVE);
+ 	BG_PanelButtonsSetup(limboPanelButtons);
+ 	C_PanelButtonsSetup(limboPanelButtons, cgs.wideXoffset);    // convert to possible widescreen coordinates..
+ }
+@@ -3469,6 +3498,61 @@ void CG_LimboPanel_Init(void)
+  * @brief CG_LimboPanel_Draw
+  * @return
+  */
++
++/* Budget panel replaces the command-map area while Custom is selected. */
++static void CG_CustomPanelDraw(void)
++{
++    int i, cost = BG_CustomCost(cg_customLoadout);
++    float x = 16 + cgs.wideXoffset;
++    vec4_t bg = { 0.035f, 0.055f, 0.065f, 1.f };
++    vec4_t row = { 0.10f, 0.14f, 0.16f, 1.f };
++    vec4_t selected = { 0.13f, 0.29f, 0.25f, 1.f };
++    vec4_t dim = { 0.47f, 0.50f, 0.52f, 1.f };
++    vec4_t accent = { 0.6f, 1.f, 0.8f, 1.f };
++    CG_FillRect(x, 42, 410, 354, bg);
++    CG_DrawRect(x, 42, 410, 354, 1, accent);
++    CG_Text_Paint_Ext(x + 12, 65, 0.26f, 0.26f, accent, "CUSTOM / DEIN LOADOUT", 0, 0, 0, &cgs.media.limboFont2);
++    CG_Text_Paint_Ext(x + 12, 87, 0.21f, 0.21f, colorWhite, va("%i / %i Punkte - %i frei", cost, CUSTOM_BUDGET, CUSTOM_BUDGET - cost), 0, 0, 0, &cgs.media.limboFont2);
++    for (i = 0; i < CUSTOM_OPTION_COUNT; i++)
++    {
++        qboolean active = (cg_customLoadout & (1 << i)) != 0;
++        qboolean enabled = active || BG_CustomValid(cg_customLoadout | (1 << i));
++        float y = 100 + 30 * i;
++        CG_FillRect(x + 8, y, 394, 28, active ? selected : row);
++        CG_Text_Paint_Ext(x + 15, y + 12, 0.18f, 0.18f, enabled ? colorWhite : dim,
++            va("[%s] %s", active ? "X" : " ", bg_customOptions[i].name), 0, 0, 0, &cgs.media.limboFont2);
++        CG_Text_Paint_Ext(x + 355, y + 12, 0.18f, 0.18f, enabled ? accent : dim,
++            va("%i P", bg_customOptions[i].cost), 0, 0, 0, &cgs.media.limboFont2);
++        CG_Text_Paint_Ext(x + 35, y + 24, 0.14f, 0.14f, enabled ? colorWhite : dim,
++            bg_customOptions[i].description, 0, 0, 0, &cgs.media.limboFont2);
++    }
++    CG_Text_Paint_Ext(x + 12, 357, 0.16f, 0.16f, colorWhite, "Basis: SMG, Pistole, Messer, 2 Granaten", 0, 0, 0, &cgs.media.limboFont2);
++    CG_Text_Paint_Ext(x + 12, 373, 0.16f, 0.16f, accent, "Mit OK speichern - aktiv beim naechsten Spawn", 0, 0, 0, &cgs.media.limboFont2);
++    CG_Text_Paint_Ext(x + 12, 388, 0.14f, 0.14f, colorWhite, "Eine gemeinsame Energie-Reserve fuer Werkzeuge", 0, 0, 0, &cgs.media.limboFont2);
++}
++
++static qboolean CG_CustomPanelKey(int key, qboolean down)
++{
++    int i;
++    float x = 16 + cgs.wideXoffset;
++    if (CG_LimboPanel_GetClass() != PC_CUSTOM || CG_LimboPanel_GetTeam() == TEAM_SPECTATOR) return qfalse;
++    if (cgDC.cursorx < x || cgDC.cursorx > x + 410 || cgDC.cursory < 42 || cgDC.cursory > 396) return qfalse;
++    if (key == K_MOUSE1 && down)
++    {
++        i = (int)((cgDC.cursory - 100) / 30);
++        if (cgDC.cursory >= 100 && i >= 0 && i < CUSTOM_OPTION_COUNT)
++        {
++            int next = cg_customLoadout ^ (1 << i);
++            if (BG_CustomValid(next))
++            {
++                cg_customLoadout = next;
++                SOUND_SELECT;
++            }
++        }
++    }
++    return key == K_MOUSE1 || key == K_MOUSE2 || key == K_MWHEELUP || key == K_MWHEELDOWN;
++}
++
+ qboolean CG_LimboPanel_Draw(void)
+ {
+ 	static panel_button_t *lastHighlight;
+@@ -3486,6 +3570,7 @@ qboolean CG_LimboPanel_Draw(void)
+ 	}
+ 
+ 	BG_PanelButtonsRender(limboPanelButtons);
++	if (CG_LimboPanel_GetClass() == PC_CUSTOM && CG_LimboPanel_GetTeam() != TEAM_SPECTATOR) CG_CustomPanelDraw();
+ 
+ 	trap_R_SetColor(NULL);
+ 	CG_DrawCursor(cgDC.cursorx, cgDC.cursory);
+@@ -3526,6 +3611,8 @@ void CG_LimboPanel_KeyHandling(int key, qboolean down)
+ {
+ 	int b1, b2;
+ 
++	if (CG_CustomPanelKey(key, down)) return;
++
+ 	if (BG_PanelButtonsKeyEvent(key, down, limboPanelButtons))
+ 	{
+ 		return;
+@@ -3812,7 +3899,7 @@ int CG_LimboPanel_WeaponCount(int slotNumber)
  			}
  
  			// is player had the minimum level required to use this weapon
@@ -34,7 +256,7 @@ index 55a8fda9c..facb69251 100644
  			{
  				continue;
  			}
-@@ -3876,7 +3876,7 @@ qboolean CG_LimboPanel_IsValidSelectedWeapon(int slot)
+@@ -3876,7 +3963,7 @@ qboolean CG_LimboPanel_IsValidSelectedWeapon(int slot)
  		if (classInfo->classSecondaryWeapons[i].weapon == weap)
  		{
  			// is player had the minimum level required to use this weapon
@@ -43,8 +265,52 @@ index 55a8fda9c..facb69251 100644
  			{
  				break;
  			}
+diff --git a/src/cgame/cg_local.h b/src/cgame/cg_local.h
+index c71728b9e..de8c80679 100644
+--- a/src/cgame/cg_local.h
++++ b/src/cgame/cg_local.h
+@@ -648,6 +648,7 @@ typedef struct clientInfo_s
+ 	int powerups;                   ///< so can display quad/flag status
+ 	int breathPuffTime;
+ 	int cls;
++	int customLoadout;
+ 	int latchedcls;
+ 	int spawnpt;
+ 	int mspawnpt;
+diff --git a/src/cgame/cg_main.c b/src/cgame/cg_main.c
+index 2212fefd3..7231b454f 100644
+--- a/src/cgame/cg_main.c
++++ b/src/cgame/cg_main.c
+@@ -1525,6 +1525,7 @@ static void CG_RegisterGraphics(void)
+ 	cgs.media.limboClassButtons[PC_SOLDIER]   = trap_R_RegisterShaderNoMip("gfx/limbo/ic_soldier");
+ 	cgs.media.limboClassButtons[PC_COVERTOPS] = trap_R_RegisterShaderNoMip("gfx/limbo/ic_covertops");
+ 	cgs.media.limboClassButtons[PC_FIELDOPS]  = trap_R_RegisterShaderNoMip("gfx/limbo/ic_fieldops");
++	cgs.media.limboClassButtons[PC_CUSTOM] = trap_R_RegisterShaderNoMip("gfx/limbo/ic_soldier");
+ 	cgs.media.limboClassButtons[PC_MEDIC]     = trap_R_RegisterShaderNoMip("gfx/limbo/ic_medic");
+ 	cgs.media.limboSkillsBS                   = trap_R_RegisterShaderNoMip("gfx/limbo/ic_battlesense");
+ 	cgs.media.limboSkillsLW                   = trap_R_RegisterShaderNoMip("gfx/limbo/ic_lightweap");
+@@ -1537,6 +1538,7 @@ static void CG_RegisterGraphics(void)
+ 	cgs.media.limboClassButtons2[PC_SOLDIER]   = trap_R_RegisterShaderNoMip("gfx/limbo/skill_soldier");
+ 	cgs.media.limboClassButtons2[PC_COVERTOPS] = trap_R_RegisterShaderNoMip("gfx/limbo/skill_covops");
+ 	cgs.media.limboClassButtons2[PC_FIELDOPS]  = trap_R_RegisterShaderNoMip("gfx/limbo/skill_fieldops");
++	cgs.media.limboClassButtons2[PC_CUSTOM] = trap_R_RegisterShaderNoMip("gfx/limbo/skill_soldier");
+ 	cgs.media.limboClassButtons2[PC_MEDIC]     = trap_R_RegisterShaderNoMip("gfx/limbo/skill_medic");
+ 
+ 	cgs.media.limboTeamButtonBack_on  = trap_R_RegisterShaderNoMip("gfx/limbo/but_team_on");
+diff --git a/src/cgame/cg_players.c b/src/cgame/cg_players.c
+index a42f5312d..3eaf76f50 100644
+--- a/src/cgame/cg_players.c
++++ b/src/cgame/cg_players.c
+@@ -305,6 +305,7 @@ void CG_NewClientInfo(int clientNum)
+ 	// latched class
+ 	v                  = Info_ValueForKey(configstring, "lc");
+ 	newInfo.latchedcls = Q_atoi(v);
++	newInfo.customLoadout = Q_atoi(Info_ValueForKey(configstring, "cb"));
+ 
+ 	if (CG_IsDemoVersionBelow(2, 85, 0))
+ 	{
 diff --git a/src/game/bg_classes.c b/src/game/bg_classes.c
-index 9902fc3e0..b86d805fe 100644
+index 9902fc3e0..8cbab62d6 100644
 --- a/src/game/bg_classes.c
 +++ b/src/game/bg_classes.c
 @@ -59,7 +59,8 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
@@ -74,7 +340,7 @@ index 9902fc3e0..b86d805fe 100644
  				{ WP_BINOCULARS,           SK_BATTLE_SENSE,                             0,                         0,   1   },
  			},
  			0,
-@@ -158,6 +160,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
+@@ -158,12 +160,25 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
  				{ WP_SMOKE_BOMB,           SK_MILITARY_INTELLIGENCE_AND_SCOPED_WEAPONS, 0,                         0,   1   },
  				{ WP_SATCHEL,              SK_MILITARY_INTELLIGENCE_AND_SCOPED_WEAPONS, 0,                         0,   1   },
  				{ WP_SATCHEL_DET,          SK_MILITARY_INTELLIGENCE_AND_SCOPED_WEAPONS, 0,                         0,   0   },
@@ -82,7 +348,26 @@ index 9902fc3e0..b86d805fe 100644
  				{ WP_BINOCULARS,           SK_BATTLE_SENSE,                             0,                         0,   1   },
  			},
  			0,
-@@ -187,7 +190,8 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
+ 			0,
+ 		},
+-	},
++			{
++            PC_CUSTOM,
++            "characters/temperate/axis/soldier.char",
++            "ui/assets/mp_gun_red.tga",
++            "ui/assets/mp_arrow_red.tga",
++            { WP_KNIFE, SK_LIGHT_WEAPONS, 0, 1, 0 },
++            { { WP_MP40, SK_LIGHT_WEAPONS, 0, 60, 30 } },
++            { { WP_LUGER, SK_LIGHT_WEAPONS, 0, 24, 8 } },
++            { WP_GRENADE_LAUNCHER, SK_LIGHT_WEAPONS, 0, 2, 0 },
++            { { WP_NONE, SK_LIGHT_WEAPONS, 0, 0, 0 } },
++            0, 0
++        },
++    },
+ 
+ 	// Allies player classes
+ 	{
+@@ -187,7 +202,8 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
  			},
  			{ WP_GRENADE_PINEAPPLE,    SK_LIGHT_WEAPONS,                            0,                         4,   0   },
  			{
@@ -92,7 +377,7 @@ index 9902fc3e0..b86d805fe 100644
  			},
  			0,
  			0,
-@@ -237,7 +241,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
+@@ -237,7 +253,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
  				{ WP_DYNAMITE,             SK_EXPLOSIVES_AND_CONSTRUCTION,              0,                         0,   1   },
  				{ WP_PLIERS,               SK_EXPLOSIVES_AND_CONSTRUCTION,              0,                         0,   1   },
  				{ WP_LANDMINE,             SK_EXPLOSIVES_AND_CONSTRUCTION,              0,                         0,   1   },
@@ -101,7 +386,7 @@ index 9902fc3e0..b86d805fe 100644
  			},
  			0,
  			0,
-@@ -260,6 +264,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
+@@ -260,6 +276,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
  			{
  				{ WP_AMMO,                 SK_SIGNALS,                                  0,                         0,   1   },
  				{ WP_SMOKE_MARKER,         SK_SIGNALS,                                  0,                         0,   1   },
@@ -109,7 +394,7 @@ index 9902fc3e0..b86d805fe 100644
  				{ WP_BINOCULARS,           SK_BATTLE_SENSE,                             0,                         0,   1   },
  			},
  			0,
-@@ -286,6 +291,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
+@@ -286,12 +303,25 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
  				{ WP_SMOKE_BOMB,           SK_MILITARY_INTELLIGENCE_AND_SCOPED_WEAPONS, 0,                         0,   1   },
  				{ WP_SATCHEL,              SK_MILITARY_INTELLIGENCE_AND_SCOPED_WEAPONS, 0,                         0,   1   },
  				{ WP_SATCHEL_DET,          SK_MILITARY_INTELLIGENCE_AND_SCOPED_WEAPONS, 0,                         0,   0   },
@@ -117,7 +402,26 @@ index 9902fc3e0..b86d805fe 100644
  				{ WP_BINOCULARS,           SK_BATTLE_SENSE,                             0,                         0,   1   },
  			},
  			0,
-@@ -367,6 +373,50 @@ qboolean BG_WeaponIsPrimaryForClassAndTeam(int classnum, team_t team, weapon_t w
+ 			0,
+ 		},
+-	},
++			{
++            PC_CUSTOM,
++            "characters/temperate/allied/soldier.char",
++            "ui/assets/mp_gun_blue.tga",
++            "ui/assets/mp_arrow_blue.tga",
++            { WP_KNIFE_KABAR, SK_LIGHT_WEAPONS, 0, 1, 0 },
++            { { WP_THOMPSON, SK_LIGHT_WEAPONS, 0, 60, 30 } },
++            { { WP_COLT, SK_LIGHT_WEAPONS, 0, 24, 8 } },
++            { WP_GRENADE_PINEAPPLE, SK_LIGHT_WEAPONS, 0, 2, 0 },
++            { { WP_NONE, SK_LIGHT_WEAPONS, 0, 0, 0 } },
++            0, 0
++        },
++    },
+ };
+ 
+ /**
+@@ -367,6 +397,50 @@ qboolean BG_WeaponIsPrimaryForClassAndTeam(int classnum, team_t team, weapon_t w
  	return qfalse;
  }
  
@@ -168,7 +472,7 @@ index 9902fc3e0..b86d805fe 100644
  /**
   * @brief BG_GetBestSecondaryWeapon
   * @param[in] classNum
-@@ -381,7 +431,12 @@ weapon_t BG_GetBestSecondaryWeapon(int classNum, team_t team, weapon_t primaryWe
+@@ -381,7 +455,12 @@ weapon_t BG_GetBestSecondaryWeapon(int classNum, team_t team, weapon_t primaryWe
  	weapon_t         weap = WP_NONE;
  	bg_playerclass_t *classInfo;
  
@@ -182,7 +486,7 @@ index 9902fc3e0..b86d805fe 100644
  
  	for (i = 0; i < MAX_WEAPS_PER_CLASS; i++)
  	{
-@@ -391,7 +446,7 @@ weapon_t BG_GetBestSecondaryWeapon(int classNum, team_t team, weapon_t primaryWe
+@@ -391,7 +470,7 @@ weapon_t BG_GetBestSecondaryWeapon(int classNum, team_t team, weapon_t primaryWe
  		}
  
  		// is player had the minimum level required to use this weapon
@@ -191,8 +495,80 @@ index 9902fc3e0..b86d805fe 100644
  		{
  			continue;
  		}
+@@ -453,6 +532,8 @@ const char *BG_ClassnameForNumber(int classNum)
+ 		return "Field Ops";
+ 	case PC_COVERTOPS:
+ 		return "Covert Ops";
++	case PC_CUSTOM:
++		return "Custom";
+ 	default:
+ 		return "^1ERROR";
+ 	}
+@@ -477,6 +558,8 @@ const char *BG_ClassnameForNumberFilename(int classNum)
+ 		return "fieldops";
+ 	case PC_COVERTOPS:
+ 		return "covertops";
++	case PC_CUSTOM:
++		return "soldier";
+ 	default:
+ 		return "^1ERROR";
+ 	}
+@@ -563,7 +646,7 @@ const char *BG_TeamnameForNumber(team_t teamNum)
+ 	}
+ }
+ 
+-skillType_t classskill[NUM_PLAYER_CLASSES] = { SK_HEAVY_WEAPONS, SK_FIRST_AID, SK_EXPLOSIVES_AND_CONSTRUCTION, SK_SIGNALS, SK_MILITARY_INTELLIGENCE_AND_SCOPED_WEAPONS };
++skillType_t classskill[NUM_PLAYER_CLASSES] = { SK_HEAVY_WEAPONS, SK_FIRST_AID, SK_EXPLOSIVES_AND_CONSTRUCTION, SK_SIGNALS, SK_MILITARY_INTELLIGENCE_AND_SCOPED_WEAPONS, SK_BATTLE_SENSE };
+ 
+ /**
+  * @brief BG_ClassSkillForClass
+@@ -579,3 +662,44 @@ skillType_t BG_ClassSkillForClass(int classnum)
+ 
+ 	return classskill[classnum];
+ }
++
++const customOption_t bg_customOptions[CUSTOM_OPTION_COUNT] = {
++    { "Medic-Paeckchen", "Heilen, keine passive Medic-Regeneration", 3 },
++    { "Medic-Spritze", "Wiederbeleben, 6 Spritzen beim Spawn", 4 },
++    { "Ammo-Paeckchen", "Munition fuer dich und dein Team", 3 },
++    { "Engineer-Paket", "Zange, Minen, Dynamit, Bauen und Reparieren", 6 },
++    { "Sniper-Gewehr", "Zusaetzlich zur SMG, mit Zielfernrohr", 4 },
++    { "Mobiles MG", "MG42/Browning zusaetzlich zur SMG", 5 },
++    { "Satchel", "Sprengladung mit Fernzuender", 4 },
++    { "Rauchgranate", "Sichtschutz, kein Luftangriff", 2 }
++};
++
++int BG_CustomCost(int mask)
++{
++    int i, cost = 0;
++    for (i = 0; i < CUSTOM_OPTION_COUNT; i++)
++    {
++        if (mask & (1 << i)) cost += bg_customOptions[i].cost;
++    }
++    return cost;
++}
++
++qboolean BG_CustomValid(int mask)
++{
++    return mask >= 0 && !(mask & ~((1 << CUSTOM_OPTION_COUNT) - 1)) && BG_CustomCost(mask) <= CUSTOM_BUDGET;
++}
++
++qboolean BG_CustomHas(const playerState_t *ps, int ability)
++{
++    return ps->stats[STAT_PLAYER_CLASS] == PC_CUSTOM && (ps->stats[STAT_CUSTOM_LOADOUT] & ability) != 0;
++}
++
++qboolean BG_HasEngineerTools(const playerState_t *ps)
++{
++    return ps->stats[STAT_PLAYER_CLASS] == PC_ENGINEER || BG_CustomHas(ps, CUSTOM_ENGINEER);
++}
++
++qboolean BG_CanRevive(const playerState_t *ps)
++{
++    return ps->stats[STAT_PLAYER_CLASS] == PC_MEDIC || BG_CustomHas(ps, CUSTOM_REVIVE);
++}
 diff --git a/src/game/bg_pmove.c b/src/game/bg_pmove.c
-index d4164bc9e..cda79cad9 100644
+index d4164bc9e..0c1841201 100644
 --- a/src/game/bg_pmove.c
 +++ b/src/game/bg_pmove.c
 @@ -4087,6 +4087,13 @@ static void PM_Weapon(void)
@@ -201,7 +577,7 @@ index d4164bc9e..cda79cad9 100644
  
 +	// Non-Engineers can only defuse with pliers and work at half the Engineer cadence.
 +	// Keep this in shared prediction; per-action progress and skill bonuses stay unchanged.
-+	if (pm->ps->weapon == WP_PLIERS && pm->ps->stats[STAT_PLAYER_CLASS] != PC_ENGINEER)
++	if (pm->ps->weapon == WP_PLIERS && !BG_HasEngineerTools(pm->ps))
 +	{
 +		addTime *= 2;
 +	}
@@ -210,10 +586,30 @@ index d4164bc9e..cda79cad9 100644
  
  #ifdef CGAMEDLL
 diff --git a/src/game/bg_public.h b/src/game/bg_public.h
-index ebdba6d25..42d418c5c 100644
+index ebdba6d25..bda9a0b26 100644
 --- a/src/game/bg_public.h
 +++ b/src/game/bg_public.h
-@@ -2659,6 +2659,8 @@ bg_playerclass_t *BG_GetPlayerClassInfo(int team, int cls);
+@@ -666,7 +666,8 @@ void PmovePredict(pmove_t *pmove, float frametime);
+ #define PC_FIELDOPS             3  ///< bomb stuff
+ #define PC_COVERTOPS            4  ///< sneak about ;o
+ 
+-#define NUM_PLAYER_CLASSES      5
++#define PC_CUSTOM               5
++#define NUM_PLAYER_CLASSES      6
+ 
+ // leaning flags..
+ #define STAT_LEAN_LEFT          0x00000001
+@@ -687,7 +688,8 @@ typedef enum
+ 	STAT_PS_FLAGS,
+ 	STAT_AIRLEFT,                  ///< airtime for CG_DrawBreathBar()
+ 	STAT_SPRINTTIME,               ///< sprinttime for CG_DrawStaminaBar()
+-	STAT_ANTIWARP_DELAY            ///< extra lag on the lagometer to reflect warp status
++	STAT_ANTIWARP_DELAY,           ///< extra lag on the lagometer to reflect warp status
++	STAT_CUSTOM_LOADOUT            ///< active budget abilities, synchronized with prediction
+ } statIndex_t;
+ 
+ /**
+@@ -2659,6 +2661,8 @@ bg_playerclass_t *BG_GetPlayerClassInfo(int team, int cls);
  bg_playerclass_t *BG_PlayerClassForPlayerState(playerState_t *ps);
  qboolean BG_ClassHasWeapon(bg_playerclass_t *classInfo, weapon_t weap);
  qboolean BG_WeaponIsPrimaryForClassAndTeam(int classnum, team_t team, weapon_t weapon);
@@ -222,11 +618,48 @@ index ebdba6d25..42d418c5c 100644
  weapon_t BG_GetBestSecondaryWeapon(int classNum, team_t team, weapon_t primaryWeapon, int *skills);
  int BG_ClassWeaponCount(bg_playerclass_t *classInfo, team_t team);
  const char *BG_ShortClassnameForNumber(int classNum);
+@@ -3360,4 +3364,28 @@ typedef struct client_vote_s
+ #define CREATE_HASH                         76308
+ #define DELETE_HASH                         76202
+ 
++
++/* ETBudget: shared catalog and validation for server, prediction and Limbo. */
++#define CUSTOM_BUDGET 12
++#define CUSTOM_OPTION_COUNT 8
++#define CUSTOM_MEDKIT (1 << 0)
++#define CUSTOM_REVIVE (1 << 1)
++#define CUSTOM_AMMO (1 << 2)
++#define CUSTOM_ENGINEER (1 << 3)
++#define CUSTOM_SNIPER (1 << 4)
++#define CUSTOM_MG (1 << 5)
++#define CUSTOM_SATCHEL (1 << 6)
++#define CUSTOM_SMOKE (1 << 7)
++typedef struct {
++    const char *name;
++    const char *description;
++    int cost;
++} customOption_t;
++extern const customOption_t bg_customOptions[CUSTOM_OPTION_COUNT];
++int BG_CustomCost(int mask);
++qboolean BG_CustomValid(int mask);
++qboolean BG_CustomHas(const playerState_t *ps, int ability);
++qboolean BG_HasEngineerTools(const playerState_t *ps);
++qboolean BG_CanRevive(const playerState_t *ps);
++
+ #endif // #ifndef INCLUDE_BG_PUBLIC_H
 diff --git a/src/game/g_client.c b/src/game/g_client.c
-index 084617b25..b13635a0a 100644
+index 084617b25..e28264e5a 100644
 --- a/src/game/g_client.c
 +++ b/src/game/g_client.c
-@@ -1269,6 +1269,7 @@ void SetWolfSpawnWeapons(gclient_t *client)
+@@ -1260,6 +1260,7 @@ void SetWolfSpawnWeapons(gclient_t *client)
+ 
+ 	// Communicate it to cgame
+ 	client->ps.stats[STAT_PLAYER_CLASS] = pc;
++	client->ps.stats[STAT_CUSTOM_LOADOUT] = pc == PC_CUSTOM && BG_CustomValid(client->sess.customActiveLoadout) ? client->sess.customActiveLoadout : 0;
+ 	client->ps.teamNum                  = team;
+ 
+ 	// zero out all ammo counts
+@@ -1269,6 +1270,7 @@ void SetWolfSpawnWeapons(gclient_t *client)
  	// All players start with a knife (not OR-ing so that it clears previous weapons)
  	client->ps.weapons[0] = 0;
  	client->ps.weapons[1] = 0;
@@ -234,7 +667,7 @@ index 084617b25..b13635a0a 100644
  
  	client->ps.weaponstate = WEAPON_READY;
  
-@@ -1317,6 +1318,10 @@ void SetWolfSpawnWeapons(gclient_t *client)
+@@ -1317,6 +1319,10 @@ void SetWolfSpawnWeapons(gclient_t *client)
  	// secondary weapon
  	//
  	weaponClassInfo = &classInfo->classSecondaryWeapons[0];   // default secondary weapon
@@ -245,7 +678,7 @@ index 084617b25..b13635a0a 100644
  
  	// ensure weapon is valid
  	if (!IS_VALID_WEAPON(client->sess.playerWeapon2))
-@@ -1327,8 +1332,7 @@ void SetWolfSpawnWeapons(gclient_t *client)
+@@ -1327,8 +1333,7 @@ void SetWolfSpawnWeapons(gclient_t *client)
  	// parse available secondary weapons and check is valid for current class
  	for (i = 0; i < MAX_WEAPS_PER_CLASS && classInfo->classSecondaryWeapons[i].weapon; i++)
  	{
@@ -255,7 +688,7 @@ index 084617b25..b13635a0a 100644
  		{
  			if (classInfo->classSecondaryWeapons[i].weapon == client->sess.playerWeapon2)
  			{
-@@ -1338,12 +1342,24 @@ void SetWolfSpawnWeapons(gclient_t *client)
+@@ -1338,12 +1343,24 @@ void SetWolfSpawnWeapons(gclient_t *client)
  		}
  	}
  
@@ -280,7 +713,53 @@ index 084617b25..b13635a0a 100644
  	//
  	// special weapons and items
  	//
-@@ -3474,6 +3490,11 @@ void ClientSpawn(gentity_t *ent, qboolean revived, qboolean teamChange, qboolean
+@@ -1374,6 +1391,28 @@ void SetWolfSpawnWeapons(gclient_t *client)
+ 			AddWeaponToPlayer(client, weaponClassInfo->weapon, weaponClassInfo->startingAmmo, weaponClassInfo->startingClip, qfalse);
+ 		}
+ 	}
++    if (pc == PC_CUSTOM)
++    {
++        int mask = client->ps.stats[STAT_CUSTOM_LOADOUT];
++        if (mask & CUSTOM_MEDKIT) AddWeaponToPlayer(client, WP_MEDKIT, 0, 1, qfalse);
++        if (mask & CUSTOM_REVIVE) AddWeaponToPlayer(client, WP_MEDIC_SYRINGE, 0, 6, qfalse);
++        if (mask & CUSTOM_AMMO) AddWeaponToPlayer(client, WP_AMMO, 0, 1, qfalse);
++        if (mask & CUSTOM_ENGINEER)
++        {
++            AddWeaponToPlayer(client, WP_PLIERS, 0, 1, qfalse);
++            AddWeaponToPlayer(client, WP_LANDMINE, 0, 3, qfalse);
++            AddWeaponToPlayer(client, WP_DYNAMITE, 0, 1, qfalse);
++        }
++        if (mask & CUSTOM_SNIPER) AddWeaponToPlayer(client, team == TEAM_AXIS ? WP_K43 : WP_GARAND, 20, 10, qfalse);
++        if (mask & CUSTOM_MG) AddWeaponToPlayer(client, team == TEAM_AXIS ? WP_MOBILE_MG42 : WP_MOBILE_BROWNING, 0, 100, qfalse);
++        if (mask & CUSTOM_SATCHEL)
++        {
++            AddWeaponToPlayer(client, WP_SATCHEL, 0, 1, qfalse);
++            AddWeaponToPlayer(client, WP_SATCHEL_DET, 0, 0, qfalse);
++        }
++        if (mask & CUSTOM_SMOKE) AddWeaponToPlayer(client, WP_SMOKE_BOMB, 0, 1, qfalse);
++    }
++
+ }
+ 
+ /**
+@@ -2113,6 +2152,8 @@ void ClientUserinfoChanged(int clientNum)
+ 		len += snprintf(configStr + len, infoLen - len, "\\lw\\%i", client->sess.latchPlayerWeapon);
+ 	}
+ 
++	len += snprintf(configStr + len, infoLen - len, "\\cb\\%i", client->sess.customLoadout);
++
+ 	if (client->sess.playerWeapon2)
+ 	{
+ 		len += snprintf(configStr + len, infoLen - len, "\\sw\\%i", client->sess.playerWeapon2);
+@@ -3270,6 +3311,7 @@ void ClientSpawn(gentity_t *ent, qboolean revived, qboolean teamChange, qboolean
+ 		}
+ 
+ 		client->sess.playerType = client->sess.latchPlayerType;
++		client->sess.customActiveLoadout = client->sess.playerType == PC_CUSTOM && BG_CustomValid(client->sess.customLoadout) ? client->sess.customLoadout : 0;
+ 
+ 		if (G_IsWeaponDisabled(ent, client->sess.latchPlayerWeapon))
+ 		{
+@@ -3474,6 +3516,11 @@ void ClientSpawn(gentity_t *ent, qboolean revived, qboolean teamChange, qboolean
  	// clear entity state values
  	BG_PlayerStateToEntityState(&client->ps, &ent->s, level.time, qfalse);
  
@@ -293,10 +772,71 @@ index 084617b25..b13635a0a 100644
  
  	// start the scripting system
 diff --git a/src/game/g_cmds.c b/src/game/g_cmds.c
-index 31f829b8d..ca180f6e5 100644
+index 31f829b8d..9a00849d0 100644
 --- a/src/game/g_cmds.c
 +++ b/src/game/g_cmds.c
-@@ -5345,6 +5345,12 @@ void ClientCommand(int clientNum)
+@@ -2280,11 +2280,42 @@ void Cmd_Team_f(gentity_t *ent, unsigned int dwCommand, int value)
+ 		playerType = ent->client->sess.playerType;
+ 	}
+ 
+-	if (playerType < PC_SOLDIER || playerType > PC_COVERTOPS)
++	if (playerType < PC_SOLDIER || playerType >= NUM_PLAYER_CLASSES)
+ 	{
+ 		playerType = PC_SOLDIER;
+ 	}
+ 
++    if (playerType == PC_CUSTOM)
++    {
++        char choice[32];
++        int mask, i;
++        trap_Argv(5, choice, sizeof(choice));
++        if (!choice[0])
++        {
++            mask = ent->client->sess.customLoadout;
++        }
++        else
++        {
++            for (i = 0; choice[i]; i++)
++            {
++                if (choice[i] < '0' || choice[i] > '9' || i > 2)
++                {
++                    CP("print \"Custom: invalid budget selection.\n\"");
++                    return;
++                }
++            }
++            mask = Q_atoi(choice);
++        }
++        if (!BG_CustomValid(mask))
++        {
++            CP("print \"Custom: selection exceeds the 12 point budget.\n\"");
++            return;
++        }
++        ent->client->sess.customLoadout = mask;
++        w = team == TEAM_ALLIES ? WP_THOMPSON : WP_MP40;
++        w2 = team == TEAM_ALLIES ? WP_COLT : WP_LUGER;
++    }
++
+ 	if (G_IsClassFull(ent, playerType, team))
+ 	{
+ 		CP("print \"team: class is not available\n\"");
+@@ -2353,6 +2384,7 @@ void Cmd_Team_f(gentity_t *ent, unsigned int dwCommand, int value)
+ 	}
+ 
+ 	ent->client->sess.latchPlayerType = playerType;
++	if (playerType == PC_CUSTOM) ClientUserinfoChanged(ent - g_entities);
+ 
+ 	if (!SetTeam(ent, s, qfalse, w, w2, qtrue))
+ 	{
+@@ -2431,6 +2463,8 @@ void Cmd_ResetSetup_f(gentity_t *ent, unsigned int dwCommand, int value)
+ 	}
+ 
+ 	ent->client->sess.latchPlayerType = ent->client->sess.playerType;
++	if (ent->client->sess.customLoadout != ent->client->sess.customActiveLoadout) changed = qtrue;
++	ent->client->sess.customLoadout = ent->client->sess.customActiveLoadout;
+ 
+ 	if (ent->client->sess.latchPlayerWeapon != ent->client->sess.playerWeapon)
+ 	{
+@@ -5345,6 +5379,12 @@ void ClientCommand(int clientNum)
  	}
  #endif
  
@@ -327,11 +867,33 @@ index 576d8fa7f..9138d9b1c 100644
  				{
  					mapEntityData_t *mEnt;
  
+diff --git a/src/game/g_items.c b/src/game/g_items.c
+index 117fe9d85..4796cc855 100644
+--- a/src/game/g_items.c
++++ b/src/game/g_items.c
+@@ -406,6 +406,8 @@ void G_DropWeapon(gentity_t *ent, weapon_t weapon)
+  */
+ qboolean G_CanPickupWeapon(weapon_t weapon, gentity_t *ent)
+ {
++	// Keep the purchased multi-weapon loadout intact; ammo packs still refill it.
++	if (ent->client->sess.playerType == PC_CUSTOM) return qfalse;
+ 	// prevent picking up while reloading
+ 	if (ent->client->ps.weaponstate == WEAPON_RELOADING)
+ 	{
 diff --git a/src/game/g_local.h b/src/game/g_local.h
-index 83781ff08..eb3b5ceee 100644
+index 83781ff08..83f051523 100644
 --- a/src/game/g_local.h
 +++ b/src/game/g_local.h
-@@ -1718,6 +1718,10 @@ void aagun_stopusing(gentity_t *self);
+@@ -643,6 +643,8 @@ typedef struct
+ 	int userMinorSpawnPointValue;                       ///< index of minor spawnpoint to spawn nearest to
+ 	int resolvedSpawnPointIndex;                        ///< most possible objective to spawn nearest to
+ 	int resolvedMinorSpawnPointIndex;                   ///< most possible blob to spawn at
++	int customLoadout;                                  ///< accepted next-spawn budget choice
++	int customActiveLoadout;                            ///< current life; preserved on revive
+ 	int latchPlayerType;                                ///< latched class
+ 	weapon_t latchPlayerWeapon;                         ///< latched primary weapon
+ 	weapon_t latchPlayerWeapon2;                        ///< latched secondary weapon
+@@ -1718,6 +1720,10 @@ void aagun_stopusing(gentity_t *self);
  float AngleDifference(float ang1, float ang2);
  qboolean G_FlingClient(gentity_t *vic, int flingType);
  
@@ -342,10 +904,41 @@ index 83781ff08..eb3b5ceee 100644
  void G_PreFilledMissileEntity(gentity_t *ent, int weaponNum, int realWeapon, int ownerNum, team_t teamNum, int clientNum, gentity_t *parent, const vec3_t start, const vec3_t dir);
  
  int G_GetEnemyPosition(gentity_t *ent, gentity_t *targ);
+diff --git a/src/game/g_lua.c b/src/game/g_lua.c
+index 855ffc2f3..46b83c76e 100644
+--- a/src/game/g_lua.c
++++ b/src/game/g_lua.c
+@@ -1309,6 +1309,8 @@ static const gentity_field_t gclient_fields[] =
+ 	_et_gclient_addfield(sess.playerWeapon,                 FIELD_INT,                 0),
+ 	_et_gclient_addfield(sess.playerWeapon2,                FIELD_INT,                 0),
+ 	_et_gclient_addfield(sess.userSpawnPointValue,          FIELD_INT,                 0),
++	_et_gclient_addfield(sess.customLoadout, FIELD_INT, FIELD_FLAG_READONLY),
++	_et_gclient_addfield(sess.customActiveLoadout, FIELD_INT, FIELD_FLAG_READONLY),
+ 	_et_gclient_addfield(sess.latchPlayerType,              FIELD_INT,                 0),
+ 	_et_gclient_addfield(sess.latchPlayerWeapon,            FIELD_INT,                 0),
+ 	_et_gclient_addfield(sess.latchPlayerWeapon2,           FIELD_INT,                 0),
+@@ -3315,6 +3317,8 @@ static void registerConstants(lua_vm_t *vm)
+ 	lua_regconstinteger(vm->L, STAT_AIRLEFT);
+ 	lua_regconstinteger(vm->L, STAT_SPRINTTIME);
+ 	lua_regconstinteger(vm->L, STAT_ANTIWARP_DELAY);
++	lua_regconstinteger(vm->L, STAT_CUSTOM_LOADOUT);
++	lua_regconstinteger(vm->L, PC_CUSTOM);
+ 
+ 	// cs, weapon and MOD constants
+ 	registerConfigstringConstants(vm);
 diff --git a/src/game/g_main.c b/src/game/g_main.c
-index d4334cfcc..96e59e504 100644
+index d4334cfcc..9f37ffaf1 100644
 --- a/src/game/g_main.c
 +++ b/src/game/g_main.c
+@@ -490,7 +490,7 @@ void G_CheckForCursorHints(gentity_t *ent)
+ 
+ 	trace_contents = (CONTENTS_TRIGGER | CONTENTS_SOLID | CONTENTS_MISSILECLIP | CONTENTS_CORPSE);
+ 
+-	if (ps->stats[STAT_PLAYER_CLASS] == PC_MEDIC)
++	if (BG_CanRevive(ps))
+ 	{
+ 		trace_contents |= CONTENTS_BODY;
+ 	}
 @@ -530,7 +530,7 @@ void G_CheckForCursorHints(gentity_t *ent)
  		hintDist = CH_MAX_DIST;
  	}
@@ -355,6 +948,51 @@ index d4334cfcc..96e59e504 100644
  	{
  		if (ent->client->landmineSpottedTime && level.time - ent->client->landmineSpottedTime < 500)
  		{
+@@ -547,7 +547,7 @@ void G_CheckForCursorHints(gentity_t *ent)
+ 		// show medics a syringe if they can revive someone
+ 		if (traceEnt->client && traceEnt->client->sess.sessionTeam == ent->client->sess.sessionTeam)
+ 		{
+-			if (ps->stats[STAT_PLAYER_CLASS] == PC_MEDIC
++			if (BG_CanRevive(ps)
+ 			    // reviving downed players
+ 			    && ((traceEnt->client->ps.pm_type == PM_DEAD && !(traceEnt->client->ps.pm_flags & PMF_LIMBO))
+ 			        // optionally healing living players
+@@ -641,7 +641,7 @@ void G_CheckForCursorHints(gentity_t *ent)
+ 				}
+ 				else
+ 				{
+-					if (ps->stats[STAT_PLAYER_CLASS] == PC_ENGINEER && G_EmplacedGunIsRepairable(traceEnt, ent))
++					if (BG_HasEngineerTools(ps) && G_EmplacedGunIsRepairable(traceEnt, ent))
+ 					{
+ 						hintType = HINT_BUILD;
+ 						hintDist = CH_BREAKABLE_DIST;
+@@ -777,7 +777,7 @@ void G_CheckForCursorHints(gentity_t *ent)
+ 						return;
+ 					}
+ 				}
+-				else if (ent->client->touchingTOI && ps->stats[STAT_PLAYER_CLASS] == PC_ENGINEER)
++				else if (ent->client->touchingTOI && BG_HasEngineerTools(ps))
+ 				{
+ 					gentity_t *constructible;
+ 
+@@ -871,7 +871,7 @@ void G_CheckForCursorHints(gentity_t *ent)
+ 						hintDist = CH_ACTIVATE_DIST;
+ 						hintType = HINT_ACTIVATE;
+ 					}
+-					else if (ent->client->touchingTOI && ps->stats[STAT_PLAYER_CLASS] == PC_ENGINEER)
++					else if (ent->client->touchingTOI && BG_HasEngineerTools(ps))
+ 					{
+ 						gentity_t *constructible;
+ 
+@@ -923,7 +923,7 @@ void G_CheckForCursorHints(gentity_t *ent)
+ 					hintDist = CH_BREAKABLE_DIST * 2;
+ 					hintType = HINT_BREAKABLE;
+ 				}
+-				else if (ent->client->touchingTOI && ps->stats[STAT_PLAYER_CLASS] == PC_ENGINEER)
++				else if (ent->client->touchingTOI && BG_HasEngineerTools(ps))
+ 				{
+ 					gentity_t *constructible;
+ 
 @@ -936,7 +936,7 @@ void G_CheckForCursorHints(gentity_t *ent)
  				}
  				break;
@@ -364,6 +1002,28 @@ index d4334cfcc..96e59e504 100644
  				{
  					hintDist = CH_BREAKABLE_DIST;
  					if (checkEnt->methodOfDeath == MOD_DYNAMITE && G_LegacyRevive_IsFirstReviveRestricted(ent))
+@@ -1006,7 +1006,7 @@ void G_CheckForCursorHints(gentity_t *ent)
+ 		ps->serverCursorHintVal = 255;
+ 	}
+ 	// if hint is out of range or there is no hint then check for touchingTOI constructible hint
+-	else if (ent->client->touchingTOI && ps->stats[STAT_PLAYER_CLASS] == PC_ENGINEER && hintType != HINT_CONSTRUCTIBLE)
++	else if (ent->client->touchingTOI && BG_HasEngineerTools(ps) && hintType != HINT_CONSTRUCTIBLE)
+ 	{
+ 		gentity_t *constructible;
+ 
+diff --git a/src/game/g_misc.c b/src/game/g_misc.c
+index f54d5cff8..64b3eb9ee 100644
+--- a/src/game/g_misc.c
++++ b/src/game/g_misc.c
+@@ -2620,7 +2620,7 @@ void G_TempTraceIgnoreEntities(gentity_t *ent)
+ 		{
+ 			G_TempTraceIgnoreEntity(hit);
+ 		}
+-		else if (hit->client && (!(ent->client->ps.stats[STAT_PLAYER_CLASS] == PC_MEDIC) || (ent->client->ps.stats[STAT_PLAYER_CLASS] == PC_MEDIC && ent->client->sess.sessionTeam != hit->client->sess.sessionTeam))
++		else if (hit->client && (!(BG_CanRevive(&ent->client->ps)) || (BG_CanRevive(&ent->client->ps) && ent->client->sess.sessionTeam != hit->client->sess.sessionTeam))
+ 		         && hit->client->ps.pm_type == PM_DEAD && !(hit->client->ps.pm_flags & PMF_LIMBO))
+ 		{
+ 			G_TempTraceIgnoreEntity(hit);
 diff --git a/src/game/g_missile.c b/src/game/g_missile.c
 index 1166f38bc..ad044b395 100644
 --- a/src/game/g_missile.c
@@ -379,6 +1039,30 @@ index 1166f38bc..ad044b395 100644
  	{
  		return qtrue;
  	}
+diff --git a/src/game/g_session.c b/src/game/g_session.c
+index d8a1f5675..82f5df33f 100644
+--- a/src/game/g_session.c
++++ b/src/game/g_session.c
+@@ -94,6 +94,8 @@ void G_WriteClientSessionData(gclient_t *client, qboolean restart)
+ 	}
+ 
+ 	cJSON_AddNumberToObject(root, "latchPlayerType", client->sess.latchPlayerType);
++	cJSON_AddNumberToObject(root, "customLoadout", client->sess.customLoadout);
++	cJSON_AddNumberToObject(root, "customActiveLoadout", client->sess.customActiveLoadout);
+ 	cJSON_AddNumberToObject(root, "latchPlayerWeapon", client->sess.latchPlayerWeapon);
+ 	cJSON_AddNumberToObject(root, "latchPlayerWeapon2", client->sess.latchPlayerWeapon2);
+ 	cJSON_AddNumberToObject(root, "referee", client->sess.referee);
+@@ -382,6 +384,10 @@ qboolean G_ReadSessionData(gclient_t *client)
+ 	client->sess.playerWeapon        = Q_ReadIntValueJson(root, "playerWeapon");
+ 	client->sess.playerWeapon2       = Q_ReadIntValueJson(root, "playerWeapon2");
+ 	client->sess.latchPlayerType     = Q_ReadIntValueJson(root, "latchPlayerType");
++	client->sess.customLoadout = Q_ReadIntValueJson(root, "customLoadout");
++	client->sess.customActiveLoadout = Q_ReadIntValueJson(root, "customActiveLoadout");
++	if (!BG_CustomValid(client->sess.customLoadout)) client->sess.customLoadout = 0;
++	if (!BG_CustomValid(client->sess.customActiveLoadout)) client->sess.customActiveLoadout = 0;
+ 	client->sess.latchPlayerWeapon   = Q_ReadIntValueJson(root, "latchPlayerWeapon");
+ 	client->sess.latchPlayerWeapon2  = Q_ReadIntValueJson(root, "latchPlayerWeapon2");
+ 	client->sess.referee             = Q_ReadIntValueJson(root, "referee");
 diff --git a/src/game/g_teammapdata.c b/src/game/g_teammapdata.c
 index b7e7e2bd3..ce4da208b 100644
 --- a/src/game/g_teammapdata.c
@@ -416,7 +1100,7 @@ index b7e7e2bd3..ce4da208b 100644
  										G_PopupMessageForMines(ent);
  
 diff --git a/src/game/g_weapon.c b/src/game/g_weapon.c
-index b5d39ff9f..391752b1f 100644
+index b5d39ff9f..4d9d80755 100644
 --- a/src/game/g_weapon.c
 +++ b/src/game/g_weapon.c
 @@ -1845,6 +1845,7 @@ void G_ArmLandmine(gentity_t *traceEnt, gentity_t *ent)
@@ -432,7 +1116,7 @@ index b5d39ff9f..391752b1f 100644
  		trap_SendServerCommand(ent - g_entities, "cp \"Landmine defused\" 1");
  
 -		Add_Ammo(ent, WP_LANDMINE, 1, qfalse);
-+		if (ent->client->sess.playerType == PC_ENGINEER)
++		if (ent->client->sess.playerType == PC_ENGINEER || BG_CustomHas(&ent->client->ps, CUSTOM_ENGINEER))
 +		{
 +			Add_Ammo(ent, WP_LANDMINE, 1, qfalse);
 +		}
@@ -445,11 +1129,11 @@ index b5d39ff9f..391752b1f 100644
   */
 +qboolean G_CanUsePliersOn(const gentity_t *player, const gentity_t *target)
 +{
-+	if (player->client->sess.playerType == PC_ENGINEER)
++	if (player->client->sess.playerType == PC_ENGINEER || BG_CustomHas(&player->client->ps, CUSTOM_ENGINEER))
 +	{
 +		return qtrue;
 +	}
-+	return player->client->sess.playerType != PC_MEDIC && target->s.eType == ET_MISSILE &&
++	return player->client->sess.playerType != PC_MEDIC && player->client->sess.playerType != PC_CUSTOM && target->s.eType == ET_MISSILE &&
 +	       ((target->methodOfDeath == MOD_LANDMINE && (target->s.effect1Time == 1 || target->s.effect1Time == 2)) ||
 +	        (target->methodOfDeath == MOD_DYNAMITE && target->s.effect1Time));
 +}
@@ -462,7 +1146,7 @@ index b5d39ff9f..391752b1f 100644
  	VectorMA(muzzleTrace, CH_MAX_DIST, forward, end);
  
 +	// Soldier, Field Ops and Covert Ops can only defuse.
-+	if (ent->client->sess.playerType != PC_ENGINEER)
++	if (ent->client->sess.playerType != PC_ENGINEER && !BG_CustomHas(&ent->client->ps, CUSTOM_ENGINEER))
 +	{
 +		trap_EngineerTrace(ent, &tr, muzzleTrace, NULL, NULL, end, ent->s.number, MASK_SHOT);
 +		if ((tr.surfaceFlags & SURF_NOIMPACT) || tr.fraction == 1.0f ||

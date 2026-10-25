@@ -19,7 +19,7 @@ class CombinedPackageTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        self.runtime = self.root / "runtime/linux/etlab"
+        self.runtime = self.root / "runtime/linux/etbudget"
         self.runtime.mkdir(parents=True)
         self.logs = self.root / "logs/linux"
         self.logs.mkdir(parents=True)
@@ -33,7 +33,7 @@ class CombinedPackageTests(unittest.TestCase):
             for name in ("cgame.mp.x86_64.so", "ui.mp.x86_64.so"):
                 archive.writestr(name, linux_files[name])
             archive.writestr("ui/common.menu", b"shared assets")
-        linux_files["etlab_v2.86.2.pk3"] = pak.getvalue()
+        linux_files["etbudget_v2.86.2.pk3"] = pak.getvalue()
         for name, data in linux_files.items():
             (self.runtime / name).write_bytes(data)
         (self.logs / "build.json").write_text(json.dumps({"files": {name: hashlib.sha256(data).hexdigest() for name, data in linux_files.items()}}), encoding="utf-8")
@@ -56,7 +56,7 @@ class CombinedPackageTests(unittest.TestCase):
             for name in ("cgame_mp_x64.dll", "ui_mp_x64.dll", "qagame_mp_x64.dll", "tvgame_mp_x64.dll"):
                 data = ("windows-" + name).encode()
                 files.append(dict(name=name, sha256=hashlib.sha256(data).hexdigest()))
-                archive.writestr("etlab/" + name, b"modified" if corrupt else data)
+                archive.writestr("etbudget/" + name, b"modified" if corrupt else data)
             archive.writestr("manifest.json", json.dumps(dict(platform="windows-x64", commit="release-commit", patchSha256=patch_hash, files=files)))
         return target
 
@@ -68,13 +68,13 @@ class CombinedPackageTests(unittest.TestCase):
             manifest = json.loads(archive.read("manifest.json"))
             self.assertEqual(manifest["platform"], "windows-x64-linux-x86_64")
             for name, expected in manifest["files"].items():
-                self.assertEqual(hashlib.sha256(archive.read("etlab/" + name)).hexdigest(), expected)
+                self.assertEqual(hashlib.sha256(archive.read("etbudget/" + name)).hexdigest(), expected)
             for name in ("qagame_mp_x64.dll", "qagame.mp.x86_64.so"):
-                self.assertIn("etlab/" + name, archive.namelist())
-            with zipfile.ZipFile(io.BytesIO(archive.read("etlab/etlab_v2.86.2.pk3"))) as pak:
+                self.assertIn("etbudget/" + name, archive.namelist())
+            with zipfile.ZipFile(io.BytesIO(archive.read("etbudget/etbudget_v2.86.2.pk3"))) as pak:
                 self.assertEqual(pak.read("ui/common.menu"), b"shared assets")
                 for name in ("cgame_mp_x64.dll", "ui_mp_x64.dll", "cgame.mp.x86_64.so", "ui.mp.x86_64.so"):
-                    self.assertEqual(pak.read(name), archive.read("etlab/" + name))
+                    self.assertEqual(pak.read(name), archive.read("etbudget/" + name))
 
     def test_different_gameplay_patch_is_rejected(self):
         with self.assertRaisesRegex(RuntimeError, "denselben Source-Commit und Mod-Patch"):

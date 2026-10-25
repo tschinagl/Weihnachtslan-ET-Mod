@@ -1,5 +1,5 @@
 ﻿[CmdletBinding()]
-param([ValidateRange(1024, 65535)][int]$Port = 27970, [ValidateRange(10, 120)][int]$TimeoutSeconds = 40)
+param([ValidateRange(1024, 65535)][int]$Port = 27980, [ValidateRange(10, 120)][int]$TimeoutSeconds = 40)
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/Common.ps1"
 $state = Read-ETLabState
@@ -9,7 +9,7 @@ if (-not (Test-Path -LiteralPath $exe)) { throw 'Zuerst Build-Mod.ps1 ausfuehren
 if (Get-NetUDPEndpoint -LocalPort $Port -ErrorAction SilentlyContinue) { throw "UDP-Port $Port ist belegt." }
 $runId = (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
 $profile = Join-Path $etlRoot "profiles\smoke-$runId"
-$modProfile = Join-Path $profile 'etlab'
+$modProfile = Join-Path $profile 'etbudget'
 $logs = Join-Path $etlRoot 'logs'
 New-Item -ItemType Directory -Path $modProfile, $logs -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $etlRoot 'tests\smoke.lua') -Destination (Join-Path $modProfile 'smoke.lua')
@@ -35,7 +35,7 @@ map oasis
 [IO.File]::WriteAllText((Join-Path $modProfile 'smoke.cfg'), ($config -replace "`r?`n", "`r`n"), (New-Object Text.UTF8Encoding($false)))
 $etlArgs = @('+set', 'dedicated', '1', '+set', 'net_enabled', '1', '+set', 'net_ip', '127.0.0.1',
     '+set', 'net_port', "$Port", '+set', 'sv_advert', '0', '+set', 'fs_basepath', ('"' + $runtime + '"'),
-    '+set', 'fs_homepath', ('"' + $profile + '"'), '+set', 'fs_game', 'etlab',
+    '+set', 'fs_homepath', ('"' + $profile + '"'), '+set', 'fs_game', 'etbudget',
     '+set', 'logfile', '2', '+exec', 'smoke.cfg')
 function Invoke-LocalRcon {
     param([string]$Command)

@@ -4,7 +4,7 @@ local initialized = false
 function et_InitGame(levelTime, randomSeed, restart)
     et.RegisterModname("ETLab smoke test")
     assert(et.trap_Cvar_Get("mapname") == "oasis", "Expected oasis")
-    assert(et.trap_Cvar_Get("fs_game") == "etlab", "Expected etlab")
+    assert(et.trap_Cvar_Get("fs_game") == "etbudget", "Expected etbudget")
     initialized = true
     et.G_Print("ETLAB_SMOKE_INIT_OK\n")
 end

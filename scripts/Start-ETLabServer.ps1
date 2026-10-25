@@ -1,5 +1,5 @@
 ﻿[CmdletBinding()]
-param([ValidatePattern('^[a-zA-Z0-9_]+$')][string]$Map = 'oasis', [ValidateRange(1024, 65535)][int]$Port = 27970)
+param([ValidatePattern('^[a-zA-Z0-9_]+$')][string]$Map = 'oasis', [ValidateRange(1024, 65535)][int]$Port = 27980)
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/Common.ps1"
 $state = Read-ETLabState

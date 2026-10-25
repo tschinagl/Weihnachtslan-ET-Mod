@@ -25,6 +25,9 @@ Fehlende Tools konkret feststellen. Keine zweite Plattform installieren oder sta
 
 ## Windows-Befehle
 
+Experiment-Einstieg: `Budget-Mod starten.cmd` hält den Release-Lock ein. Aktueller Modname: `etbudget`; Spielport 27980. Vor Übergabe `scripts/Test-BudgetClient.ps1` ausführen. Grafiktests laufen stumm auf einem privaten Windows-Desktop; niemals einen sichtbaren Fallback starten.
+
+
 Vom Repository-Root aus; nur auf einem Windows-Arbeitsrechner verwenden:
 
 ```powershell

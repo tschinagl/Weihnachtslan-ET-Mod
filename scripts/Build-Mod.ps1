@@ -24,7 +24,7 @@ if ($OnlyIfNeeded -and (Test-Path -LiteralPath $fingerprintFile)) {
     $previous = Get-Content -LiteralPath $fingerprintFile -Encoding UTF8 -Raw | ConvertFrom-Json
     $valid = $previous.input -eq $fingerprint
     foreach ($item in $previous.outputs) {
-        $file = Join-Path $etlRuntime ('etlab/' + $item.name)
+        $file = Join-Path $etlRuntime ('etbudget/' + $item.name)
         if (-not (Test-Path -LiteralPath $file) -or (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ne $item.sha256) { $valid = $false }
     }
     if ($valid) { Write-Host 'Mod-Build ist aktuell und seine Dateien sind unveraendert.'; return }
@@ -54,7 +54,7 @@ function Invoke-CMakeLogged {
 }
 # Only game modules are built. Engine executables come from the official release archive.
 $configureArgs = @('-S', $etlSource, '-B', $etlBuild, '-G', 'Visual Studio 17 2022', '-A', 'x64',
-    '-DCROSS_COMPILE32=OFF', '-DBUNDLED_LIBS=ON', '-DMODNAME=etlab',
+    '-DCROSS_COMPILE32=OFF', '-DBUNDLED_LIBS=ON', '-DMODNAME=etbudget',
     '-DBUILD_CLIENT=OFF', '-DBUILD_SERVER=OFF', '-DBUILD_MOD=ON',
     "-DCMAKE_INSTALL_PREFIX=$($etlRuntime.Replace('\', '/'))",
     '-DINSTALL_EXTRA=OFF', '-DFEATURE_AUTOUPDATE=OFF', '-DFEATURE_AUTH=OFF',
@@ -68,8 +68,8 @@ Invoke-CMakeLogged -Arguments $buildArgs -LogName 'build.log'
 $ctest = Join-Path (Split-Path $cmake -Parent) 'ctest.exe'
 & $ctest --test-dir $etlBuild -C $Configuration --output-on-failure
 if ($LASTEXITCODE -ne 0) { throw 'ETLab gameplay regression tests failed.' }
-$modOutput = Join-Path $etlBuild 'etlab'
-$modRuntime = Join-Path $etlRuntime 'etlab'
+$modOutput = Join-Path $etlBuild 'etbudget'
+$modRuntime = Join-Path $etlRuntime 'etbudget'
 New-Item -ItemType Directory -Path $modRuntime -Force | Out-Null
 $modFiles = @(Get-ChildItem -LiteralPath $modOutput -File | Where-Object { $_.Extension -in @('.dll', '.pk3') })
 $manifestPath = Join-Path $etlLogs 'staged-mod-manifest.json'
@@ -78,7 +78,7 @@ if (Test-Path -LiteralPath $manifestPath) {
     $previousManifest = Get-Content -LiteralPath $manifestPath -Encoding UTF8 -Raw | ConvertFrom-Json
     $previousNames = @($previousManifest.files)
 }
-foreach ($oldPak in (Get-ChildItem -LiteralPath $modRuntime -Filter 'etlab_*.pk3' -File)) {
+foreach ($oldPak in (Get-ChildItem -LiteralPath $modRuntime -Filter 'etbudget_*.pk3' -File)) {
     if ($oldPak.Name -in $modFiles.Name) { continue }
     if ($oldPak.Name -notin $previousNames) { throw "Nicht verwaltetes altes Paket kann den Build ueberdecken: $($oldPak.FullName). Bitte manuell klaeren." }
     $archive = Join-Path $etlRoot ('archive\mod-staging\' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff'))

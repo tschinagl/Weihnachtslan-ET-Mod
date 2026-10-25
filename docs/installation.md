@@ -9,7 +9,7 @@ Diese Datei bei Paketexport, Installationsauftrag, LAN-Bereitstellung oder Relea
 - Zielsystem/Architektur: Windows x64 oder Linux x86_64; vorhandene offizielle ET: Legacy-Installation und deren tatsächliche Startbefehle.
 - Passender Mod-Stand, `manifest.json`, Release-Lock, Source-Commit und Patch-Hash. Keine Gleichheit allein aus einem PK3-Dateinamen ableiten.
 - Original-Spieldaten vorhanden: `pak0.pk3`, `pak1.pk3`, `pak2.pk3`. Nicht in Mod-ZIPs oder Git aufnehmen.
-- Installationspfad, `fs_homepath`, aktive Spiel-/Serverprozesse und vorhandene `etlab`-Dateien prüfen. Individuelle Configs/Profile nicht überschreiben.
+- Installationspfad, `fs_homepath`, aktive Spiel-/Serverprozesse und vorhandene `etbudget`-Dateien prüfen. Individuelle Configs/Profile nicht überschreiben.
 
 ## Paketexport
 
@@ -23,8 +23,8 @@ Ausgaben liegen in `dist/`. Exporte bauen bzw. verwenden den festgehaltenen Rele
 
 ## Installation
 
-- Bestehenden eigenen `etlab`-Ordner separat sichern, dann vollständig durch den Paketinhalt ersetzen; keine alten PK3s beimischen.
-- `etlab` liegt neben `etmain`. Auf Server und allen Clients identisches kombiniertes Paket verwenden, wenn Windows und Linux gemeinsam spielen.
+- Bestehenden eigenen `etbudget`-Ordner separat sichern, dann vollständig durch den Paketinhalt ersetzen; keine alten PK3s beimischen.
+- `etbudget` liegt neben `etmain`. Auf Server und allen Clients identisches kombiniertes Paket verwenden, wenn Windows und Linux gemeinsam spielen.
 - Persönliche Download-Caches können Pakete überdecken. Für Abnahme separates `fs_homepath` verwenden; keine fremden Profile bereinigen.
 - Engine-Dateien nicht durch Mod-Artefakte ersetzen. Windows lädt DLLs, Linux SO-Dateien; beide Clienttypen brauchen passende Module im identischen PK3.
 
@@ -32,15 +32,15 @@ Startparameter für die tatsächliche offizielle Installation ableiten:
 
 ```sh
 # Linux, offizielles x86_64-Archiv; HOST und PORT aus Auftragskontext.
-./etl.x86_64 +set fs_game etlab +connect HOST:PORT
-./etl.x86_64 +set fs_game etlab +set g_etlabPractice 1 +map oasis
-./etlded.x86_64 +set dedicated 1 +set net_ip 0.0.0.0 +set net_port 27960 +set fs_game etlab +set sv_advert 0 +map oasis
+./etl.x86_64 +set fs_game etbudget +connect HOST:PORT
+./etl.x86_64 +set fs_game etbudget +set g_etlabPractice 1 +map oasis
+./etlded.x86_64 +set dedicated 1 +set net_ip 0.0.0.0 +set net_port 27960 +set fs_game etbudget +set sv_advert 0 +map oasis
 ```
 
 ```powershell
 # Windows x64
-.\etl.exe +set fs_game etlab +connect HOST:PORT
-.\etl.exe +set fs_game etlab +set g_etlabPractice 1 +map oasis
+.\etl.exe +set fs_game etbudget +connect HOST:PORT
+.\etl.exe +set fs_game etbudget +set g_etlabPractice 1 +map oasis
 ```
 
 LAN-Server ausdrücklich an gewünschte Adresse binden; Entwicklungsstarter verwenden sonst Loopback. Firewall, öffentliche Werbung, Downloadserver und externe Serverkonfiguration nur im beauftragten Scope ändern. Ohne Downloadserver müssen Clients das Paket vor dem Beitritt erhalten. Dedicated Server dürfen keine Übungsobjekte erzeugen.

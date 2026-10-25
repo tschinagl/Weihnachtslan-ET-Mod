@@ -21,3 +21,12 @@ Alle bisherigen Spielregeln passen in den Gamecode-Mod. Für weitere Klassen mü
 Cvars ändern nur vorhandene Optionen. Lua eignet sich für Serverregeln und Tests, soweit die API diese Funktionen zugänglich macht. Veränderungen von Waffenverhalten, Prediction oder Client-Auswahl benötigen häufig den hier verwendeten nativen Gamecode-Mod.
 
 Engine-Dateien unter anderem in `src/client`, `src/server`, `src/renderer*` sowie externe `libs/` gehören nicht zu den Mod-Änderungen. CMake wird lediglich um das native Testziel ergänzt.
+
+## ETBudget
+
+- bg_public.h / bg_classes.c: PC_CUSTOM, STAT_CUSTOM_LOADOUT, gemeinsamer Katalog, Kosten, Validierung und Fähigkeitenprüfungen.
+- g_cmds.c / g_session.c / g_client.c: validierte Spawn-Auswahl, Cancel, persistente Session, Ausrüstung und cb-Konfigurationsschlüssel.
+- cg_limbopanel.c / cg_players.c: sechster Button, Punktepanel, Eingabe und serverseitig bestätigte Auswahl.
+- g_weapon.c / bg_pmove.c / g_main.c / g_misc.c: Zangen- und Revive-Berechtigungen. g_items.c verhindert nicht gekaufte Waffen-Pickups.
+- cg_draw_hud.c: Charge-Anzeige nach aktuell gewählter Waffe.
+- tests/budget-runtime.lua und scripts/Test-BudgetClient.ps1: echter stummer Hintergrund-Clienttest.
