@@ -25,7 +25,7 @@ Host-Plattform zuerst feststellen und `AGENTS.md` befolgen: Windows nur Windows,
 Stand 25.10.2026, offizieller Release 2.86.2, Upstream-Commit `fdb40f8706b4e5081bf721cdc5726b2791a6e1f9`:
 
 - Mod-only Release-Build mit VS 2022 / MSVC 19.44: erfolgreich; `BUILD_CLIENT=OFF`, `BUILD_SERVER=OFF`, `BUILD_MOD=ON`.
-- 793 native Gameplay-Prüfungen erfolgreich: beide Teams, alle Klassen/Loadouts, XP 0/4, Zangenrechte, Minenentdeckung und Schaden.
+- 1337 native Gameplay-Prüfungen erfolgreich. Medic-Prüfungen umfassen Klassenwechsel, Fernglas-Level 0–4, Zangenverbote, fehlende Minenmarkierung und erhaltene Trap Awareness.
 - Offizielle Engine-Executables mit Downloadarchiv bytegleich geprüft.
 - Dedicated-Server-Smoke und echter Client-Smoke erfolgreich; Screenshot geprüft.
 - Zangentakt Soldier/Engineer bei identischem Skill: etwa 100/50 ms; vollständige Defuses mit Frame-Toleranz. Verzögerte Entfernung von Dynamit kann einen zusätzlichen Engineer-Impuls ergeben.

@@ -36,8 +36,8 @@ static void CheckSpawn(int team, int cls, weapon_t primary, int skillLevel)
 	}
 	SetWolfSpawnWeapons(&client);
 	Check(COM_BitCheck(client.ps.weapons, primary), "selected primary retained");
-	Check(COM_BitCheck(client.ps.weapons, WP_PLIERS), "pliers on every class/team");
-	Check(client.ps.stats[STAT_KEYS] & (1 << INV_BINOCS), "binoculars at zero Battle Sense XP");
+	Check(!!COM_BitCheck(client.ps.weapons, WP_PLIERS) == (cls != PC_MEDIC), "pliers on every class/team except Medic");
+	Check(!!(client.ps.stats[STAT_KEYS] & (1 << INV_BINOCS)) == (cls != PC_MEDIC), "zero-XP binoculars exclude Medic");
 	Check(COM_BitCheck(client.ps.weapons, akimbo) == (bonus || skillLevel == 4), "conditional bonus and normal XP unlock");
 	Check(client.ps.weapon == primary, "primary initially selected");
 	Check(client.sess.skill[SK_LIGHT_WEAPONS] == skillLevel, "no artificial XP promotion");
@@ -65,7 +65,15 @@ static void CheckSpawn(int team, int cls, weapon_t primary, int skillLevel)
 	client.sess.skill[SK_LIGHT_WEAPONS] = 0;
 	SetWolfSpawnWeapons(&client);
 	Check(!COM_BitCheck(client.ps.weapons, WP_AKIMBO_LUGER) && !COM_BitCheck(client.ps.weapons, WP_AKIMBO_COLT), "no stale bonus after class change");
-	Check(COM_BitCheck(client.ps.weapons, WP_PLIERS), "pliers retained after class change");
+	Check(!COM_BitCheck(client.ps.weapons, WP_PLIERS), "no pliers after changing to Medic");
+	Check(!(client.ps.stats[STAT_KEYS] & (1 << INV_BINOCS)), "no stale binoculars after changing to zero-XP Medic");
+	for (i = 0; i <= 4; i++)
+	{
+		client.sess.skill[SK_BATTLE_SENSE] = i;
+		SetWolfSpawnWeapons(&client);
+		Check(!!(client.ps.stats[STAT_KEYS] & (1 << INV_BINOCS)) == (i >= SK_BATTLE_SENSE_BINOCULAR), "Medic retains normal Battle Sense binocular unlock");
+		Check(!COM_BitCheck(client.ps.weapons, WP_PLIERS), "Medic never unlocks pliers");
+	}
 }
 
 /* Engine geometry is controlled here; all gameplay functions are the real module. */
@@ -157,11 +165,11 @@ static void CheckPliersActions(int team, int cls)
 		target->methodOfDeath = kind < 2 ? MOD_DYNAMITE : (kind < 4 ? MOD_LANDMINE : MOD_SATCHEL);
 		target->s.effect1Time = kind == 0 || kind == 2 || kind == 4;
 		target->classname = "test_target";
-		Check(G_CanUsePliersOn(player, target) == (cls == PC_ENGINEER || kind == 0 || kind == 2), "pliers eligibility: only armed dynamite/mines outside Engineer");
+		Check(G_CanUsePliersOn(player, target) == (cls == PC_ENGINEER || (cls != PC_MEDIC && (kind == 0 || kind == 2))), "pliers eligibility excludes Medic and restricts other non-Engineers");
 		if (cls != PC_ENGINEER || kind == 0 || kind == 2)
 		{
 			Weapon_Engineer(player);
-			Check(target->health == ((kind == 0 || kind == 2) ? 3 : 0), "real pliers dispatch blocks arming, satchel and construction");
+			Check(target->health == ((cls != PC_MEDIC && (kind == 0 || kind == 2)) ? 3 : 0), "real pliers dispatch blocks Medic, arming, satchel and construction");
 		}
 	}
 	target->classname = "misc_mg42";
@@ -182,7 +190,15 @@ static void CheckPliersActions(int team, int cls)
 	target->health = 248;
 	target->classname = "landmine";
 	Weapon_Engineer(player);
-	Check(!target->inuse, "completed mine defuse removes target for all classes");
+	Check(!!target->inuse == (cls == PC_MEDIC), "Medic cannot complete a mine defuse");
+	if (cls == PC_MEDIC)
+	{
+		Check(target->health == 248, "Medic makes no mine defuse progress");
+		target->s.effect1Time = 2;
+		Check(!G_CanUsePliersOn(player, target), "Medic cannot defuse triggered mines");
+		Weapon_Engineer(player);
+		Check(target->inuse && target->health == 248, "Medic leaves triggered mines unchanged");
+	}
 	if (cls != PC_ENGINEER)
 	{
 		Check(client.ps.ammo[WP_LANDMINE] == 0 && client.ps.ammoclip[WP_LANDMINE] == 0, "defusing does not supply mines to other classes");
@@ -258,12 +274,27 @@ static void CheckSpotting(int team, int cls)
 	G_CheckSpottedLandMines();
 	Check(!mine->s.modelindex2 && !mine->count2, "no passive binocular spotting");
 	client.ps.eFlags |= EF_ZOOMING;
+	Check(G_LandmineSnapshotCallback(MAX_CLIENTS, 0) == (cls != PC_MEDIC), "binocular snapshots exclude Medic");
 	for (i = 0; i < 5; i++)
 	{
 		level.time += 500;
 		G_CheckSpottedLandMines();
 	}
-	Check(mine->s.modelindex2 && mine->count2 == 250, "normal binocular dwell spots enemy mine for every class");
+	if (cls == PC_MEDIC)
+	{
+		Check(!mine->s.modelindex2 && !mine->count2, "Medic cannot spot mines with binoculars");
+		client.sess.skill[SK_BATTLE_SENSE] = 4;
+		Check(G_LandmineSnapshotCallback(MAX_CLIENTS, 0), "Medic retains normal Battle Sense trap awareness");
+		for (i = 0; i < 5; i++)
+		{
+			level.time += 500;
+			G_CheckSpottedLandMines();
+		}
+		Check(!mine->s.modelindex2 && !mine->count2, "high-skill Medic cannot mark mines with binoculars");
+		player->client = NULL;
+		return;
+	}
+	Check(mine->s.modelindex2 && mine->count2 == 250, "normal binocular dwell spots enemy mine for eligible classes");
 	Check((mine->r.contents & MASK_SHOT) && mine->r.maxs[2] == 40, "flag has bullet hitbox");
 	Check(!(mine->r.contents & MASK_PLAYERSOLID), "flag does not block walking");
 	player->client = NULL;

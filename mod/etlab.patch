@@ -44,7 +44,7 @@ index 55a8fda9c..facb69251 100644
  				break;
  			}
 diff --git a/src/game/bg_classes.c b/src/game/bg_classes.c
-index 9902fc3e0..84c00f99b 100644
+index 9902fc3e0..b86d805fe 100644
 --- a/src/game/bg_classes.c
 +++ b/src/game/bg_classes.c
 @@ -59,7 +59,8 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
@@ -57,17 +57,7 @@ index 9902fc3e0..84c00f99b 100644
  			},
  			0,
  			0,
-@@ -83,7 +84,8 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
- 				{ WP_MEDIC_SYRINGE,        SK_FIRST_AID,                                0,                         10,  1   },
- 				{ WP_MEDIC_ADRENALINE,     SK_FIRST_AID,                                SK_MEDIC_ADRENALINE,       0,   1   }, // share ammo with medic syringe
- 				{ WP_MEDKIT,               SK_FIRST_AID,                                0,                         0,   1   },
--				{ WP_BINOCULARS,           SK_BATTLE_SENSE,                             SK_BATTLE_SENSE_BINOCULAR, 1,   0   },
-+				{ WP_PLIERS,               SK_EXPLOSIVES_AND_CONSTRUCTION,              0,                         0,   1   },
-+				{ WP_BINOCULARS,           SK_BATTLE_SENSE,                             0,                         1,   0   },
- 			},
- 			0,
- 			0,
-@@ -109,7 +111,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
+@@ -109,7 +110,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
  				{ WP_DYNAMITE,             SK_EXPLOSIVES_AND_CONSTRUCTION,              0,                         0,   1   },
  				{ WP_PLIERS,               SK_EXPLOSIVES_AND_CONSTRUCTION,              0,                         0,   1   },
  				{ WP_LANDMINE,             SK_EXPLOSIVES_AND_CONSTRUCTION,              0,                         0,   1   },
@@ -76,7 +66,7 @@ index 9902fc3e0..84c00f99b 100644
  			},
  			0,
  			0,
-@@ -132,6 +134,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
+@@ -132,6 +133,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
  			{
  				{ WP_AMMO,                 SK_SIGNALS,                                  0,                         0,   1   },
  				{ WP_SMOKE_MARKER,         SK_SIGNALS,                                  0,                         0,   1   },
@@ -84,7 +74,7 @@ index 9902fc3e0..84c00f99b 100644
  				{ WP_BINOCULARS,           SK_BATTLE_SENSE,                             0,                         0,   1   },
  			},
  			0,
-@@ -158,6 +161,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
+@@ -158,6 +160,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
  				{ WP_SMOKE_BOMB,           SK_MILITARY_INTELLIGENCE_AND_SCOPED_WEAPONS, 0,                         0,   1   },
  				{ WP_SATCHEL,              SK_MILITARY_INTELLIGENCE_AND_SCOPED_WEAPONS, 0,                         0,   1   },
  				{ WP_SATCHEL_DET,          SK_MILITARY_INTELLIGENCE_AND_SCOPED_WEAPONS, 0,                         0,   0   },
@@ -92,7 +82,7 @@ index 9902fc3e0..84c00f99b 100644
  				{ WP_BINOCULARS,           SK_BATTLE_SENSE,                             0,                         0,   1   },
  			},
  			0,
-@@ -187,7 +191,8 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
+@@ -187,7 +190,8 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
  			},
  			{ WP_GRENADE_PINEAPPLE,    SK_LIGHT_WEAPONS,                            0,                         4,   0   },
  			{
@@ -102,17 +92,7 @@ index 9902fc3e0..84c00f99b 100644
  			},
  			0,
  			0,
-@@ -211,7 +216,8 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
- 				{ WP_MEDIC_SYRINGE,        SK_FIRST_AID,                                0,                         10,  1   },
- 				{ WP_MEDIC_ADRENALINE,     SK_FIRST_AID,                                SK_MEDIC_ADRENALINE,       0,   1   }, // share ammo with medic syringe
- 				{ WP_MEDKIT,               SK_FIRST_AID,                                0,                         0,   1   },
--				{ WP_BINOCULARS,           SK_BATTLE_SENSE,                             SK_BATTLE_SENSE_BINOCULAR, 1,   0   },
-+				{ WP_PLIERS,               SK_EXPLOSIVES_AND_CONSTRUCTION,              0,                         0,   1   },
-+				{ WP_BINOCULARS,           SK_BATTLE_SENSE,                             0,                         1,   0   },
- 			},
- 			0,
- 			0,
-@@ -237,7 +243,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
+@@ -237,7 +241,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
  				{ WP_DYNAMITE,             SK_EXPLOSIVES_AND_CONSTRUCTION,              0,                         0,   1   },
  				{ WP_PLIERS,               SK_EXPLOSIVES_AND_CONSTRUCTION,              0,                         0,   1   },
  				{ WP_LANDMINE,             SK_EXPLOSIVES_AND_CONSTRUCTION,              0,                         0,   1   },
@@ -121,7 +101,7 @@ index 9902fc3e0..84c00f99b 100644
  			},
  			0,
  			0,
-@@ -260,6 +266,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
+@@ -260,6 +264,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
  			{
  				{ WP_AMMO,                 SK_SIGNALS,                                  0,                         0,   1   },
  				{ WP_SMOKE_MARKER,         SK_SIGNALS,                                  0,                         0,   1   },
@@ -129,7 +109,7 @@ index 9902fc3e0..84c00f99b 100644
  				{ WP_BINOCULARS,           SK_BATTLE_SENSE,                             0,                         0,   1   },
  			},
  			0,
-@@ -286,6 +293,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
+@@ -286,6 +291,7 @@ bg_playerclass_t bg_playerClasses[2][NUM_PLAYER_CLASSES] =
  				{ WP_SMOKE_BOMB,           SK_MILITARY_INTELLIGENCE_AND_SCOPED_WEAPONS, 0,                         0,   1   },
  				{ WP_SATCHEL,              SK_MILITARY_INTELLIGENCE_AND_SCOPED_WEAPONS, 0,                         0,   1   },
  				{ WP_SATCHEL_DET,          SK_MILITARY_INTELLIGENCE_AND_SCOPED_WEAPONS, 0,                         0,   0   },
@@ -137,7 +117,7 @@ index 9902fc3e0..84c00f99b 100644
  				{ WP_BINOCULARS,           SK_BATTLE_SENSE,                             0,                         0,   1   },
  			},
  			0,
-@@ -367,6 +375,50 @@ qboolean BG_WeaponIsPrimaryForClassAndTeam(int classnum, team_t team, weapon_t w
+@@ -367,6 +373,50 @@ qboolean BG_WeaponIsPrimaryForClassAndTeam(int classnum, team_t team, weapon_t w
  	return qfalse;
  }
  
@@ -188,7 +168,7 @@ index 9902fc3e0..84c00f99b 100644
  /**
   * @brief BG_GetBestSecondaryWeapon
   * @param[in] classNum
-@@ -381,7 +433,12 @@ weapon_t BG_GetBestSecondaryWeapon(int classNum, team_t team, weapon_t primaryWe
+@@ -381,7 +431,12 @@ weapon_t BG_GetBestSecondaryWeapon(int classNum, team_t team, weapon_t primaryWe
  	weapon_t         weap = WP_NONE;
  	bg_playerclass_t *classInfo;
  
@@ -202,7 +182,7 @@ index 9902fc3e0..84c00f99b 100644
  
  	for (i = 0; i < MAX_WEAPS_PER_CLASS; i++)
  	{
-@@ -391,7 +448,7 @@ weapon_t BG_GetBestSecondaryWeapon(int classNum, team_t team, weapon_t primaryWe
+@@ -391,7 +446,7 @@ weapon_t BG_GetBestSecondaryWeapon(int classNum, team_t team, weapon_t primaryWe
  		}
  
  		// is player had the minimum level required to use this weapon
@@ -243,10 +223,18 @@ index ebdba6d25..42d418c5c 100644
  int BG_ClassWeaponCount(bg_playerclass_t *classInfo, team_t team);
  const char *BG_ShortClassnameForNumber(int classNum);
 diff --git a/src/game/g_client.c b/src/game/g_client.c
-index 084617b25..10afbe624 100644
+index 084617b25..b13635a0a 100644
 --- a/src/game/g_client.c
 +++ b/src/game/g_client.c
-@@ -1317,6 +1317,10 @@ void SetWolfSpawnWeapons(gclient_t *client)
+@@ -1269,6 +1269,7 @@ void SetWolfSpawnWeapons(gclient_t *client)
+ 	// All players start with a knife (not OR-ing so that it clears previous weapons)
+ 	client->ps.weapons[0] = 0;
+ 	client->ps.weapons[1] = 0;
++	client->ps.stats[STAT_KEYS] &= ~(1 << INV_BINOCS);
+ 
+ 	client->ps.weaponstate = WEAPON_READY;
+ 
+@@ -1317,6 +1318,10 @@ void SetWolfSpawnWeapons(gclient_t *client)
  	// secondary weapon
  	//
  	weaponClassInfo = &classInfo->classSecondaryWeapons[0];   // default secondary weapon
@@ -257,7 +245,7 @@ index 084617b25..10afbe624 100644
  
  	// ensure weapon is valid
  	if (!IS_VALID_WEAPON(client->sess.playerWeapon2))
-@@ -1327,8 +1331,7 @@ void SetWolfSpawnWeapons(gclient_t *client)
+@@ -1327,8 +1332,7 @@ void SetWolfSpawnWeapons(gclient_t *client)
  	// parse available secondary weapons and check is valid for current class
  	for (i = 0; i < MAX_WEAPS_PER_CLASS && classInfo->classSecondaryWeapons[i].weapon; i++)
  	{
@@ -267,7 +255,7 @@ index 084617b25..10afbe624 100644
  		{
  			if (classInfo->classSecondaryWeapons[i].weapon == client->sess.playerWeapon2)
  			{
-@@ -1338,12 +1341,24 @@ void SetWolfSpawnWeapons(gclient_t *client)
+@@ -1338,12 +1342,24 @@ void SetWolfSpawnWeapons(gclient_t *client)
  		}
  	}
  
@@ -292,7 +280,7 @@ index 084617b25..10afbe624 100644
  	//
  	// special weapons and items
  	//
-@@ -3474,6 +3489,11 @@ void ClientSpawn(gentity_t *ent, qboolean revived, qboolean teamChange, qboolean
+@@ -3474,6 +3490,11 @@ void ClientSpawn(gentity_t *ent, qboolean revived, qboolean teamChange, qboolean
  	// clear entity state values
  	BG_PlayerStateToEntityState(&client->ps, &ent->s, level.time, qfalse);
  
@@ -377,20 +365,22 @@ index d4334cfcc..96e59e504 100644
  					hintDist = CH_BREAKABLE_DIST;
  					if (checkEnt->methodOfDeath == MOD_DYNAMITE && G_LegacyRevive_IsFirstReviveRestricted(ent))
 diff --git a/src/game/g_missile.c b/src/game/g_missile.c
-index 1166f38bc..f043188c7 100644
+index 1166f38bc..ad044b395 100644
 --- a/src/game/g_missile.c
 +++ b/src/game/g_missile.c
-@@ -1806,7 +1806,7 @@ qboolean G_LandmineSnapshotCallback(int entityNum, int clientNum)
+@@ -1805,8 +1805,8 @@ qboolean G_LandmineSnapshotCallback(int entityNum, int clientNum)
+ 		return qtrue;
  	}
  
- 	// fix for covops spotting
+-	// fix for covops spotting
 -	if (clEnt->client->sess.playerType == PC_COVERTOPS && (clEnt->client->ps.eFlags & EF_ZOOMING) && (clEnt->client->ps.stats[STAT_KEYS] & (1 << INV_BINOCS)))
-+	if ((clEnt->client->ps.eFlags & EF_ZOOMING) && (clEnt->client->ps.stats[STAT_KEYS] & (1 << INV_BINOCS)))
++	// Send hidden mines to classes that can spot them through binoculars.
++	if (clEnt->client->sess.playerType != PC_MEDIC && (clEnt->client->ps.eFlags & EF_ZOOMING) && (clEnt->client->ps.stats[STAT_KEYS] & (1 << INV_BINOCS)))
  	{
  		return qtrue;
  	}
 diff --git a/src/game/g_teammapdata.c b/src/game/g_teammapdata.c
-index b7e7e2bd3..515282223 100644
+index b7e7e2bd3..ce4da208b 100644
 --- a/src/game/g_teammapdata.c
 +++ b/src/game/g_teammapdata.c
 @@ -1170,7 +1170,7 @@ void G_CheckSpottedLandMines(void)
@@ -398,7 +388,7 @@ index b7e7e2bd3..515282223 100644
  		}
  
 -		if (ent->client->sess.playerType == PC_COVERTOPS && (ent->client->ps.eFlags & EF_ZOOMING))
-+		if ((ent->client->ps.stats[STAT_KEYS] & (1 << INV_BINOCS)) && (ent->client->ps.eFlags & EF_ZOOMING))
++		if (ent->client->sess.playerType != PC_MEDIC && (ent->client->ps.stats[STAT_KEYS] & (1 << INV_BINOCS)) && (ent->client->ps.eFlags & EF_ZOOMING))
  		{
  			G_SetupFrustum_ForBinoculars(ent);
  
@@ -426,7 +416,7 @@ index b7e7e2bd3..515282223 100644
  										G_PopupMessageForMines(ent);
  
 diff --git a/src/game/g_weapon.c b/src/game/g_weapon.c
-index b5d39ff9f..5ef09e8f4 100644
+index b5d39ff9f..391752b1f 100644
 --- a/src/game/g_weapon.c
 +++ b/src/game/g_weapon.c
 @@ -1845,6 +1845,7 @@ void G_ArmLandmine(gentity_t *traceEnt, gentity_t *ent)
@@ -459,7 +449,7 @@ index b5d39ff9f..5ef09e8f4 100644
 +	{
 +		return qtrue;
 +	}
-+	return target->s.eType == ET_MISSILE &&
++	return player->client->sess.playerType != PC_MEDIC && target->s.eType == ET_MISSILE &&
 +	       ((target->methodOfDeath == MOD_LANDMINE && (target->s.effect1Time == 1 || target->s.effect1Time == 2)) ||
 +	        (target->methodOfDeath == MOD_DYNAMITE && target->s.effect1Time));
 +}
@@ -471,7 +461,7 @@ index b5d39ff9f..5ef09e8f4 100644
  
  	VectorMA(muzzleTrace, CH_MAX_DIST, forward, end);
  
-+	// Other classes have a defusing tool, not the Engineer's full toolkit.
++	// Soldier, Field Ops and Covert Ops can only defuse.
 +	if (ent->client->sess.playerType != PC_ENGINEER)
 +	{
 +		trap_EngineerTrace(ent, &tr, muzzleTrace, NULL, NULL, end, ent->s.number, MASK_SHOT);
