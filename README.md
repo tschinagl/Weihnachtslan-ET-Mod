@@ -2,6 +2,8 @@
 
 Ein experimenteller ET: Legacy-Mod mit einer sechsten Klasse: Custom. Im Limbo-Menü lassen sich acht Ausrüstungs- und Fähigkeitspakete innerhalb eines Budgets von zwölf Punkten kombinieren. Die fünf klassischen Klassen bleiben spielbar. Der Windows-Prototyp verwendet eigene Spielprofile und die unveränderte offizielle ET: Legacy-Engine.
 
+Dieses Repository enthält **zwei eigenständige Mods in getrennten Branches**: `main` ist der Weihnachts-LAN-Mod (`etlab`), `experiment/custom-budget` ist der erfolgreich ausprobierte ETBudget-Prototyp (`etbudget`). Der Budget-Branch ist ein Machbarkeitstest; ein Merge in `main` ist nicht vorgesehen. Die [Mod- und Branch-Zuordnung](docs/mod-varianten.md) beschreibt Funktionsumfang, Teststatus und die getrennte Weiterarbeit.
+
 ## Einstieg für LLM-Agenten
 
 Dieses Projekt wird durch LLM-Agenten entwickelt. Mit Ausnahme der Einleitung richtet sich die Dokumentation an ausführende Agenten; keine persönlichen Anreden oder Schritt-für-Schritt-Anleitungen für menschliche Entwickler ergänzen.

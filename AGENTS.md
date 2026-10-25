@@ -1,5 +1,11 @@
 # Agentenvertrag: ETBudget-Mod
 
+## Zwei eigenständige Mods
+
+- Vor Arbeiten `docs/mod-varianten.md` lesen und den aktuellen Branch prüfen. `main` gehört zu `etlab`; `experiment/custom-budget` gehört zu `etbudget`.
+- Die Branches sind eigenständige Mod-Varianten. ETBudget ist ein am 25.10.2026 grundsätzlich erfolgreich ausprobierter Machbarkeitstest; kein automatischer Merge, Rebase oder Rückführen nach `main`.
+- Ein erfolgreicher Prototyptest ist keine vollständige Release-/Multiplayer-/Balancing-Abnahme und kein Auftrag zum Ausbau. Änderungen nur im beauftragten Mod durchführen.
+
 ## Scope und Dokumentation
 
 - Dieses Repository wird ausschließlich durch LLM-Agenten entwickelt. README-Einleitung: kurze Beschreibung des Weihnachts-LAN-Mods. Übrige Dokumentation: technische Agentenanweisungen, Invarianten, Befehle, Nachweise und Grenzen; keine persönlichen Bezüge oder menschlichen Tutorials.

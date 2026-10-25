@@ -19,6 +19,10 @@ Stand 25.10.2026, offizieller Release 2.86.2, Upstream fdb40f8706b4e5081bf721cdc
 - Limbo-Screenshot geprüft: sechs Klassenbuttons, acht Pakete, Kosten, gewählte und deaktivierte Einträge, Punkteanzeige.
 - Unsichtbarer Runtime-Lauf erfolgreich: privater ETBudgetTest-Desktop, Eingabe-Desktop vor/nach Test unverändert, Sound disabled im Engine-Log, gerenderter Screenshot vorhanden und geprüft.
 
+## Persönlicher Praxistest
+
+Am 25.10.2026 wurde im Chat nach eigenem Ausprobieren bestätigt: „der Test funktioniert einmal prinzipiell“. Diese Rückmeldung bestätigt die grundsätzliche Machbarkeit der Custom-Klasse mit Punktebudget. Sie ersetzt keine vollständige Prüfung aller Kombinationen, Multiplayer-Interaktionen oder des Balancings. ETBudget bleibt ein eigenständiger Experiment-Mod; siehe [Mod-Varianten und Branch-Vertrag](mod-varianten.md).
+
 ## Artefakte und Grenzen
 
 - Lokale Ergebnisse: logs/build.log, .cache/sources/v2.86.2/build/Testing/Temporary/LastTest.log, logs/budget-client.json, profiles/budget-smoke-*/etbudget/etconsole.log und Screenshots. Nicht versionieren.
